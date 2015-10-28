@@ -59,3 +59,7 @@ class User(db.Model):
     def get(cls, user_id):
         return cls.query.filter(User.id == user_id).first()
 
+    @classmethod
+    def get_user_by_name(cls, username):
+        return cls.query.filter(User.username == username).first()
+

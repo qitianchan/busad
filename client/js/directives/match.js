@@ -1,4 +1,4 @@
-Blog.directive('match', function () {
+UserApp.directive('match', function () {
     return {
         require: 'ngModel',
         restrict: 'A',

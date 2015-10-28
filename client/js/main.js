@@ -1,9 +1,9 @@
-window.Blog = angular.module('Blog', ['ngRoute', 'restangular', 'LocalStorageModule'])
+window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl'])
 
 .run(function($location, Restangular, AuthService) {
     Restangular.setFullRequestInterceptor(function(element, operation, route, url, headers, params, httpConfig) {
         if (AuthService.isAuthenticated()) {
-            headers['Authorization'] = 'Basic ' + AuthService.getToken();
+            headers['Authorization'] = 'Basic ' + btoa(AuthService.getToken());
         }
         return {
             headers: headers
@@ -29,9 +29,9 @@ window.Blog = angular.module('Blog', ['ngRoute', 'restangular', 'LocalStorageMod
 
 .config(function($routeProvider, RestangularProvider) {
 
-    RestangularProvider.setBaseUrl('http://localhost:5000/api/v1');
+    RestangularProvider.setBaseUrl('http://localhost:5000/api');
 
-    var partialsDir = '../partials';
+    var partialsDir = 'partials';
 
     var redirectIfAuthenticated = function(route) {
         return function($location, $q, AuthService) {
@@ -47,7 +47,7 @@ window.Blog = angular.module('Blog', ['ngRoute', 'restangular', 'LocalStorageMod
 
             return deferred.promise;
         }
-    }
+    };
 
     var redirectIfNotAuthenticated = function(route) {
         return function($location, $q, AuthService) {
@@ -63,18 +63,18 @@ window.Blog = angular.module('Blog', ['ngRoute', 'restangular', 'LocalStorageMod
 
             return deferred.promise;
         }
-    }
+    };
 
     $routeProvider
         .when('/', {
-            controller: 'HomeDetailCtrl',
-            templateUrl: partialsDir + '/home/detail.html'
+            controller: 'AdUploadCtrl',
+            templateUrl: partialsDir + '/home/aduplaod.html'
         })
         .when('/sessions/create', {
             controller: 'SessionCreateCtrl',
             templateUrl: partialsDir + '/session/create.html',
             resolve: {
-                redirectIfAuthenticated: redirectIfAuthenticated('/posts/create')
+                redirectIfAuthenticated: redirectIfAuthenticated('/')
             }
         })
         .when('/sessions/destroy', {
@@ -92,4 +92,4 @@ window.Blog = angular.module('Blog', ['ngRoute', 'restangular', 'LocalStorageMod
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }
         });
-})
+});

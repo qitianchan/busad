@@ -1,4 +1,4 @@
-Blog.factory('Post', function(Restangular) {
+UserApp.factory('Post', function(Restangular) {
     var Post;
     Post = {
         get: function() {

@@ -1,8 +1,8 @@
 {
   "name": "client",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "authors": [
-    "John Kevin Basco <basco.johnkevin@gmail.com>"
+    "Qitian Chan <chenqitian@noit.cn>"
   ],
   "license": "MIT",
   "ignore": [
@@ -13,10 +13,10 @@
     "tests"
   ],
   "dependencies": {
-    "angular-route": "~1.2.21",
+    "angular-route": "~1.4.x",
     "bootstrap": "~3.2.0",
     "restangular": "~1.4.0",
-    "angularjs": "~1.2.21",
+    "angularjs": "~1.4.x",
     "angular-local-storage": "~0.0.7"
   }
 }

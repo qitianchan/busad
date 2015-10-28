@@ -24,22 +24,23 @@ h6, .h6 {
  * Override Bootstrap's default container.
  */
 
-@media (min-width: 1200px) {
-    .container {
-        width: 970px;
-    }
-}
+/*@media (min-width: 1200px) {*/
+    /*.container {*/
+        /*width: 970px;*/
+    /*}*/
+/*}*/
 
 
 /*
  * Masthead for nav
  */
 
-.blog-masthead {
-    background-color: #428bca;
+.busad-masthead {
+    background-color: #7266ba;
     -webkit-box-shadow: inset 0 -2px 5px rgba(0,0,0,.1);
                     box-shadow: inset 0 -2px 5px rgba(0,0,0,.1);
 }
+
 
 /* Nav links */
 .blog-nav-item {
@@ -75,7 +76,7 @@ h6, .h6 {
 
 
 /*
- * Blog name and description
+ * UserApp name and description
  */
 
 .blog-header {
@@ -135,7 +136,7 @@ h6, .h6 {
 
 
 /*
- * Blog posts
+ * UserApp posts
  */
 
 .blog-post {
@@ -164,4 +165,63 @@ h6, .h6 {
 }
 .blog-footer p:last-child {
     margin-bottom: 0;
+}
+
+.form-control {
+    box-shadow: none;
+}
+.form-control:focus {
+    border-color: #7266ba;
+    outline: 0;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(98, 84, 178, .6);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(98, 84, 178, .6);
+}
+
+.login {
+    background-color: #F0F3F4;
+    height: 100%;
+    padding-top: 100px;
+    margin-bottom: 50px;
+    position: absolute;
+    width: 100%;
+    min-height: 100%;
+
+}
+.login-form {
+    width: 300px;
+}
+.login-header {
+    text-align: center;
+}
+.no-border, .no-borders {
+    border-color: transparent;
+    border-width: 0;
+}
+
+.btn {
+    font-weight: 500;
+    border-radius: 2px;
+    outline: 0!important;
+}
+
+
+
+.btn-primary {
+    color: #ffffff !important;
+    background-color: #7266ba;
+    border-color: #7266ba;
+}
+
+.btn-primary:hover, .btn-primary:focus,
+.btn-primary.focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primaryr {
+    background-color: #6254B2
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.ad-upload {
+    padding-top: 50px;
 }

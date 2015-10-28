@@ -2,7 +2,7 @@
 from flask import g
 from wtforms.validators import Email
 
-from server.app.main import db, bcrypt
+from server.app.extensions import db, bcrypt
 
 
 class Bus(db.Model):

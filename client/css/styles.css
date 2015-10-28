@@ -2,3 +2,8 @@
     margin-top: 20px;
     margin-bottom: 20px;
 }
+body {
+    font-family: "microsoft yahei","SimHei", "Microsoft JhengHei","Times New Roman","ËÎÌו",Times,serif;
+    color: #58666E;
+    /*background-color: #F0F3F4;*/
+}

@@ -1,39 +1,42 @@
 <!DOCTYPE html>
-<html ng-app="Blog" ng-controller="ApplicationCtrl">
+<html ng-app="UserApp" ng-controller="ApplicationCtrl">
     <head>
         <meta charset="utf-8" />
-        <title>Blog</title>
+        <title>公交车广告</title>
 
-        <link rel="stylesheet" type="text/css" href="./bower_components/bootstrap/dist/css/bootstrap.css">
-        <link rel="stylesheet" type="text/css" href="./css/theme.css">
-        <link rel="stylesheet" type="text/css" href="./css/styles.css">
+        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="css/theme.css">
+        <link rel="stylesheet" type="text/css" href="css/styles.css">
     </head>
     <body>
 
-        <div class="blog-masthead">
-            <div class="container">
+        <div class="busad-masthead">
+            <div class="container" ng-hide="!isLoggedIn">
                 <nav class="blog-nav">
                     <a class="blog-nav-item" href="#" ng-class="{active: isActive('/')}">Home</a>
                     <a class="blog-nav-item" href="#/sessions/create" ng-hide="isLoggedIn" ng-class="{active: isActive('/sessions/create')}">Login</a>
                     <a class="blog-nav-item" href="#/sessions/destroy" ng-show="isLoggedIn">Logout</a>
-                    <a class="blog-nav-item" href="#/users/create" ng-class="{active: isActive('/users/create')}">Register</a>
-                    <a class="blog-nav-item" href="#/posts/create" ng-show="isLoggedIn" ng-class="{active: isActive('/posts/create')}">Create a post</a>
                 </nav>
             </div>
         </div>
 
-        <div class="container main-view">
+        <div ng-view></div>
 
-            <div ng-view></div>
+        <!--<div class="blog-footer">-->
+            <!--<p>Blog built by <a href="https://twitter.com/johnkevinmbasco">@johnkevinmbasco</a> using Flask and AngularJS.</p>-->
+            <!--<p>-->
+                <!--<a href="#">Back to top</a>-->
+            <!--</p>-->
+        <!--</div>-->
 
         </div><!-- /.container -->
 
-        <div class="blog-footer">
-            <p>Blog built by <a href="https://twitter.com/johnkevinmbasco">@johnkevinmbasco</a> using Flask and AngularJS.</p>
-            <p>
-                <a href="#">Back to top</a>
-            </p>
-        </div>
+        <!--<div class="blog-footer">-->
+            <!--<p>Blog built by <a href="https://twitter.com/johnkevinmbasco">@johnkevinmbasco</a> using Flask and AngularJS.</p>-->
+            <!--<p>-->
+                <!--<a href="#">Back to top</a>-->
+            <!--</p>-->
+        <!--</div>-->
 
         <script type="text/javascript" src="./bower_components/angularjs/angular.js"></script>
         <script type="text/javascript" src="./bower_components/angular-route/angular-route.js"></script>
@@ -41,7 +44,7 @@
         <script type="text/javascript" src="./bower_components/restangular/dist/restangular.js"></script>
         <script type="text/javascript" src="./bower_components/angular-local-storage/angular-local-storage.js"></script>
         <script type="text/javascript" src="./js/main.js"></script>
-        <script type="text/javascript" src="./js/controllers/HomeDetailCtrl.js"></script>
+        <script type="text/javascript" src="js/controllers/AdUploadCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/ApplicationCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/SessionCreateCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/SessionDestroyCtrl.js"></script>
@@ -51,6 +54,7 @@
         <script type="text/javascript" src="./js/factories/User.js"></script>
         <script type="text/javascript" src="./js/factories/Post.js"></script>
         <script type="text/javascript" src="./js/services/AuthService.js"></script>
+        <!--<script type="text/javascript" src="./js/services/RectangularTest.js"></script>-->
         <script type="text/javascript" src="./js/directives/match.js"></script>
 
     </body>

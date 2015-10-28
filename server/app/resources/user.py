@@ -41,6 +41,7 @@ class UserAPI(restful.Resource):
 
 
 class UserList(restful.Resource):
+    decorators = [auth.login_required]
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('username', type=str, location='form', required=True,

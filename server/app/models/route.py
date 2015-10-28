@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import g
 from wtforms.validators import Email
-from server.app.main import db, bcrypt
+from server.app.extensions import db, bcrypt
 
 
 class Route(db.Model):
@@ -29,4 +29,3 @@ class Route(db.Model):
     @classmethod
     def get(cls, route_id):
         return cls.query.filter(Route.id == route_id).first()
-

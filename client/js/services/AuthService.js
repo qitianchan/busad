@@ -1,11 +1,11 @@
-Blog.service('AuthService', AuthService = function($q, localStorageService, Session) {
+UserApp.service('AuthService', AuthService = function($q, localStorageService, Session) {
 
     this.login = function(credentials) {
         var me = this;
-        deferred = $q.defer()
-        Session.create(credentials, true).then(function(user) {
-            me.setToken(credentials);
-            return deferred.resolve(user);
+        deferred = $q.defer();
+        Session.create(credentials, true).then(function(res) {
+            me.setToken(res.token);
+            return deferred.resolve(res);
         }, function(response) {
             if (response.status == 401) {
                 return deferred.reject(false);
@@ -27,8 +27,8 @@ Blog.service('AuthService', AuthService = function($q, localStorageService, Sess
         return false;
     };
 
-    this.setToken = function(credentials) {
-        localStorageService.set('token', btoa(credentials.email + ':' + credentials.password));
+    this.setToken = function(token) {
+        localStorageService.set('token', token + ':unused');
     };
 
     this.getToken = function() {

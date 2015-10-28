@@ -1,4 +1,4 @@
-Blog.controller('ApplicationCtrl', function($scope, $location, Post, AuthService) {
+UserApp.controller('ApplicationCtrl', function($scope, $location, Post, AuthService) {
     $scope.$on('$routeChangeStart', function (event, next) {
         if (AuthService.isAuthenticated()) {
             $scope.isLoggedIn = true;

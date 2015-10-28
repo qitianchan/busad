@@ -1,4 +1,4 @@
-Blog.controller('PostCreateCtrl', function($scope, $location, Post) {
+UserApp.controller('PostCreateCtrl', function($scope, $location, Post) {
     $scope.submit = function(isValid, post) {
         $scope.submitted = true;
         $scope.postCreateForm.$setDirty();

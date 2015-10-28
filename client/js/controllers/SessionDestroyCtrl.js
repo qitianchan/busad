@@ -1,4 +1,4 @@
-Blog.controller('SessionDestroyCtrl', function($scope, $location, AuthService) {
+UserApp.controller('SessionDestroyCtrl', function($scope, $location, AuthService) {
     AuthService.logout();
-    $location.path('/');
+    $location.path('/sessions/create');
 })

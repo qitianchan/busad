@@ -1,4 +1,4 @@
-Blog.controller('UserCreateCtrl', function($scope, User) {
+UserApp.controller('UserCreateCtrl', function($scope, User) {
 
     var defaultForm = {
         email: '',

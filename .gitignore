@@ -9,4 +9,5 @@ pip-log.txt
 /client/bower_components/
 
 server/app.sqlite
-server/app/config.py
+#server/app/config.py
+basad-venv

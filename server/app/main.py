@@ -9,7 +9,6 @@ from extensions import db, bcrypt, auth
 from resources import api
 from server.app.models import User
 
-
 # 创建app，并且配置扩展
 def create_app():
     app = Flask(__name__)
@@ -35,10 +34,11 @@ def config_extensions(app):
             # try to authenticate by token
 
             user = User.query.filter_by(username=username_or_token).first()
+            # user = User.get_user_by_name(username_or_token)
             if not user or not user.verify_password(password):
                 return False
-            g.user = user
-            return True
+        g.user = user
+        return True
 
 
 app = create_app()
