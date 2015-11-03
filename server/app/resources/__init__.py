@@ -5,6 +5,7 @@ from .district import DistrictAPI
 from .route_resources import RouteAPI, RouteList
 from .bus_resources import BusList, BusAPI
 from .login import Login
+from .publish_ad import Publish
 # flask_restful
 api = Api(prefix='/api')
 
@@ -23,3 +24,5 @@ api.add_resource(BusList, '/buses')
 api.add_resource(BusAPI, '/buses/<int:id>')
 
 api.add_resource(Login, '/login')
+
+api.add_resource(Publish, '/publish')

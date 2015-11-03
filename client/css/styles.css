@@ -3,7 +3,11 @@
     margin-bottom: 20px;
 }
 body {
-    font-family: "microsoft yahei","SimHei", "Microsoft JhengHei","Times New Roman","ËÎÌå",Times,serif;
+    font-family: "microsoft yahei","SimHei", "Microsoft JhengHei","Times New Roman","ï¿½ï¿½ï¿½ï¿½",Times,serif;
     color: #58666E;
     /*background-color: #F0F3F4;*/
+}
+
+select > option:active {
+    background-color: #9588B2;
 }

@@ -10,6 +10,7 @@ from  sqlalchemy import and_
 
 route_fields = {
     'id': fields.Integer,
+    'district_id': fields.Integer,
     'route_name': fields.String,
 }
 
@@ -27,10 +28,10 @@ class RouteList(Resource):
 
     @marshal_with(route_fields)
     def get(self):
-        routes = Route.query.filter(and_(Route.user_id == g.user.id)).all()
+        routes = Route.get_routes()
         if not routes:
             abort(404)
-        return {}
+        return routes
 
 
 class RouteAPI(Resource):

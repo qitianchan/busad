@@ -1,4 +1,4 @@
-window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl'])
+window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl', 'angularFileUpload'])
 
 .run(function($location, Restangular, AuthService) {
     Restangular.setFullRequestInterceptor(function(element, operation, route, url, headers, params, httpConfig) {

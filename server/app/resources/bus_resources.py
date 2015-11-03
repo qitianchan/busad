@@ -10,6 +10,7 @@ from  sqlalchemy import and_
 
 bus_fields = {
     'id': fields.Integer,
+    'route_id': fields.Integer,
     'plate_number': fields.String,
     'light_number': fields.String,
     'eui': fields.String
@@ -75,54 +76,3 @@ class BusAPI(Resource):
         except Exception, e:
             db.session.rollback()
             raise e
-
-# class RouteAPI(Resource):
-#     decorators = [auth.login_required, marshal_with(route_fields)]
-#
-#     # @marshal_with(route_fields)
-#     def get(self, id):
-#         route = Route.get(id)
-#         if not route:
-#             abort(404)
-#         return route
-#
-#     def post(self):
-#         district_id = request.json.get('districtId')
-#         route_name = request.json.get('routeName')
-#         if not route_name or district_id:
-#             abort(400)
-#
-#         route = Route(district_id, route_name)
-#         db.session.add(route)
-#         db.session.commit()
-#         return route, 201.
-#
-#     def put(self, id):
-#         district_id = request.json.get('districtId')
-#         route_name = request.json.get('routeName')
-#         route = Route.get(id)
-#         if not route:
-#             abort(404)
-#         route.district_id = district_id
-#         route.route_name = route_name
-#
-#         db.session.add(route)
-#         db.session.commit()
-#
-#         return route, 201
-#
-#     @auth.login_required
-#     def delete(self, id):
-#         route = Route.get(id)
-#
-#         if route:
-#             if route.buses:
-#                 return jsonify({'resCode': '30', 'resMsg': 'theere is some buses index for it'})
-#             else:
-#                 db.session.delete(route)
-#                 db.session.commit()
-#                 return jsonify({"resCode": '20', 'resMsg': 'delete success'})
-#
-#         else:
-#             return jsonify({"resCode": '30', 'resMsg': 'route is not exit'})
-#

@@ -1,3 +1,84 @@
-<div >
-  <h1>Helsslo World</h1>
+<div class="container">
+  <div class="busad-content page">
+    <div class="page-inner">
+      <h2>发布广告</h2>
+      <hr>
+      <div class="row">
+        <form action="" class="form-horizontal">
+          <div class="form-group">
+            <div class="district">
+            <label for="district-selector" class="col-sm-2 control-label">区域</label>
+            <div class="col-sm-10">
+              <!--<select id="district-selector" class="form-control col-sm-10" ng-model="districtSelected">-->
+              <!--<option ng-repeat="district in districts" value={{district.id}}>{{district.district_name}}</option>-->
+              <!--</select>-->
+              <select id="district-selector" class="form-control col-sm-10" ng-model="districtSelected"
+                      ng-options="d.id as d.district_name for d in districts">
+                <option value="">请选择</option>
+              </select>
+              </div>
+            </div> <!-- district -->
+              <label  class="col-sm-2 control-label">线路</label>
+              <div class="col-sm-10 checkbox-region">
+                <div class="route-checkbox-region-inner">
+                  <ul class="list-inline">
+                    <li>
+                      <input type="checkbox" id="routeAll" value="{{routeAll}}" ng-model="routeAll">
+                      <label for="routeAll">全部</label>
+                    </li>
+                    <li ng-model="checkRoutes" ng-repeat="route in filterRoutes | filter:districtSelected">
+                      <input tabindex="1" type="checkbox" id={{route.route_name}}
+                             name=""
+                             value="{{route.route_name}}"
+                             ng-model="route.selected">
+                      <label for={{route.route_name}}>{{route.route_name}}</label>
+                    </li>
+                  </ul>
+                  <p ng-repeat="route in routes">routes:{{route.route_name}}: {{route.selected}}</p>
+                </div>
+              </div>
+            <!--</div>&lt;!&ndash; route end &ndash;&gt;-->
+            <!--</div> &lt;!&ndash; bus end &ndash;&gt;-->
+
+            <div class="bus-select">
+              <label  class="col-sm-2 control-label">公交车</label>
+              <div class="col-sm-10 checkbox-region">
+                <div class="bus-select-region-inner">
+                  <ul class="list-inline">
+                    <li>
+                      <input type="checkbox" id="busAll" ng-model="busAll">
+                      <label for="busAll">全部</label>
+                    </li>
+                    <li ng-repeat="bus in filterBuses">
+                      <input type="checkbox" id={{bus.plate_number}} value="bus.plate_number" ng-model="bus.selected">
+                      <label for="{{bus.plate_number}}">{{bus.plate_number}}</label>
+                    </li>
+                  </ul>
+                  <p ng-repeat="bus in buses">routes:{{bus.plate_number}}: {{bus.selected}}</p>
+                </div>
+              </div>
+            </div> <!-- bus end -->
+
+            <div class="upload-file">
+              <div class="form-group">
+                <label for="adFile" class="col-sm-2 control-label">广告文件</label>
+                <!--<a href="javascript:;" class="btn btn-primary">上传TXT文件-->
+                <!--<input id="adFile" type="file" class="upload-file" value="上传文件">-->
+                <!--</a>-->
+                <div>
+                  <input id="adFile" type="file" class="btn btn-primary"  nv-file-select="" uploader="uploader" value="上传TXT文件">
+                </div>
+              </div>  <!-- /upload file -->
+              <hr>
+              <div class="" style="float:right;">
+                <input type="submit" value="提交" ng-click="publishAD()" class="btn btn-primary">
+              </div>
+            </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="busad-upload">
 </div>

@@ -17,6 +17,8 @@
     "bootstrap": "~3.2.0",
     "restangular": "~1.4.0",
     "angularjs": "~1.4.x",
-    "angular-local-storage": "~0.0.7"
+    "angular-local-storage": "~0.0.7",
+    "icheck": "~1.0.2",
+    "angular-file-upload": "~2.2.0"
   }
 }
