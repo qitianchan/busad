@@ -222,7 +222,7 @@ h6, .h6 {
     width: 100%;
 }
 
-.busad-upload {
+.busad-background {
     padding-top: 50px;
     background-color: #F2F5E9;
     position: absolute;
@@ -275,8 +275,8 @@ h6, .h6 {
 
     border-top: 2em solid #9588B2;
     margin-top: 2em;
-
 }
+
 .route-checkbox-region-inner {
     margin-top: 20px;
     margin-left: 20px;
@@ -300,4 +300,39 @@ h6, .h6 {
     /*opacity: 0;*/
     margin-top: 400px;
     padding-top: 20px;
+}
+.page .row {
+    margin: 0;
+}
+
+.route-head {
+    width: 100%;
+    position:relative;
+    background-color: #9588B2;
+    font-size: large;
+}
+
+.route-item {
+    padding: 10px;
+    text-align: center;
+    color: white !important;
+}
+.route-item:hover {
+    background-color: #8968AD
+}
+.route-item a{
+    color: white;
+}
+
+.itemActive {
+    background-color: white !important;
+    color: #58666E;
+}
+
+
+.itemActive a {
+    color: #58666E;
+}
+.v-middle {
+    /*text-align: center;*/
 }

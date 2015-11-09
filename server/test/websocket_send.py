@@ -17,7 +17,7 @@ TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
 
 url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
 
-send_data = {"cmd": "tx", "EUI": "BE7A0000000005D2", "port": 1, "data": "5659"}
+send_data = {"cmd": "tx", "EUI": "BE7A00000000063A", "port": 1, "data": "5659"}
 
 ws = websocket.WebSocket()
 

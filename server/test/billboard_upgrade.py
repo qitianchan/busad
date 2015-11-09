@@ -37,7 +37,7 @@ APP_SKEY = "2b7e151628aed2a6abf7158809cf4f3c"
 
 # 需要下载的文件
 FILE_NAME = "3HelloNIOT.TXT"
-PACKET_SIZE = 50
+PACKET_SIZE = 158
 
 
 sendData = {}

@@ -89,7 +89,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
             euis = [];
             angular.forEach($scope.filterBuses, function(bus){
                if(bus.selected){
-                   euis.append(bus.eui)
+                   euis.push(bus.eui)
                }
             });
 
@@ -101,4 +101,6 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
             //);
 
         }
+
+
 }]);

@@ -6,6 +6,7 @@ import flask_restful as restful
 from server.app.extensions import db, bcrypt, auth
 from server.app.models import Bus
 from  sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 
 
 bus_fields = {
@@ -39,7 +40,7 @@ class BusList(Resource):
             db.session.add(bus)
             db.session.commit()
             return bus, 201
-        except Exception, e:
+        except IntegrityError, e:
             db.session.rollback()
             raise e
 
@@ -52,7 +53,7 @@ class BusAPI(Resource):
         bus = Bus.get(id)
         return bus, 201
 
-    @marshal_with(bus_fields)
+    # @marshal_with(bus_fields)
     def put(self, id):
         bus = Bus.get(id)
         route_id = request.json.get('route_id')
@@ -61,9 +62,17 @@ class BusAPI(Resource):
         eui = request.json.get('eui')
 
         bus.update_bus(route_id=route_id, plate_number=plate_number, light_number=light_number, eui=eui)
-        db.session.add(bus)
-        db.session.commit()
-        return bus, 201
+        try:
+            db.session.add(bus)
+            db.session.commit()
+            return marshal(bus, bus_fields), 201
+        except IntegrityError, e:
+            params = e.params[:-1]
+            err_str = u'参数错误'
+            for i in xrange(len(params)):
+                err_str = err_str + ',' + params[i]
+            err_str += u'已经存在'
+            return jsonify({'code': '30', 'errmsg': err_str, 'data':None, 'message': ''})
 
     @marshal_with(bus_fields)
     def delete(self, id):

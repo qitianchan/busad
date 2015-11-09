@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-from .loraCrypto import LoRaCrypto
+from .loraCrypto import LoRaCrypto, wrap_data

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/bin/python3
 import websocket
 import json
@@ -77,7 +78,8 @@ def main():
     ws.close()
 
 if __name__ == "__main__":
-    main()
+    from server.app.libs.loraencrypto import wrap_data
+    print wrap_data('he', 'BX32903', 20)
 
 
 

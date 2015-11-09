@@ -1,20 +1,36 @@
 /**
  * Created by qitian on 2015/10/29.
  */
-UserApp.factory('Bus', function(Restangular) {
-    var Bus;
-    Bus = {
+(function() {
+    UserApp.factory('Bus', function(Restangular) {
+    //var Bus;
+    //Bus = {
+    //
+    //    getList: function() {
+    //        return Restangular
+    //            .one('buses')
+    //            .getList();
+    //    },
+    //    create: function(data) {
+    //        return Restangular
+    //            .one('buses')
+    //            .customPOST(data);
+    //    },
+    //    put: function(data){
+    //        return Restangular
+    //            .one('buses')
+    //            .customPUT(data)
+    //    }
+    //};
+    //return Bus;
 
-        getList: function() {
-            return Restangular
-                .one('buses')
-                .getList();
-        },
-        create: function(data) {
-            return Restangular
-                .one('buses')
-                .customPOST(data);
+        var service = Restangular.service('buses');
+        service.validateData = function(student) {
+            // validate student data
         }
-    };
-    return Bus;
-});
+
+        return service;
+
+    });
+
+}());

@@ -1,6 +1,6 @@
-window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl', 'angularFileUpload'])
+window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl', 'angularFileUpload', 'xeditable', 'toaster'])
 
-.run(function($location, Restangular, AuthService) {
+.run(function($location, Restangular, AuthService, editableOptions) {
     Restangular.setFullRequestInterceptor(function(element, operation, route, url, headers, params, httpConfig) {
         if (AuthService.isAuthenticated()) {
             headers['Authorization'] = 'Basic ' + btoa(AuthService.getToken());
@@ -25,6 +25,8 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
             return false;
         }
     });
+        // angular-xeditable
+        editableOptions.theme = 'bs3';
 })
 
 .config(function($routeProvider, RestangularProvider) {
@@ -88,6 +90,13 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
         .when('/posts/create', {
             controller: 'PostCreateCtrl',
             templateUrl: partialsDir + '/post/create.html',
+            resolve: {
+                redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
+            }
+        })
+        .when('/route/routes', {
+            controller: 'RouteCtrl',
+            templateUrl: partialsDir + '/route/routes.html',
             resolve: {
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }

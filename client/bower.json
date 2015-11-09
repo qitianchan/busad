@@ -19,6 +19,8 @@
     "angularjs": "~1.4.x",
     "angular-local-storage": "~0.0.7",
     "icheck": "~1.0.2",
-    "angular-file-upload": "~2.2.0"
+    "angular-file-upload": "~2.2.0",
+    "angular-xeditable": "~0.1.9",
+    "AngularJS-Toaster": "~0.4.16"
   }
 }
