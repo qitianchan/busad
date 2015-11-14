@@ -20,10 +20,10 @@ def on_message(ws, message):
     print message
 
 if __name__ == '__main__':
-    while True:
-        data = ws.recv()
-        print data
-    # ws_app = websocket.WebSocketApp(url=url,
-    #                                 on_message=on_message)
-    # ws_app.run_forever()
+    # while True:
+    #     data = ws.recv()
+    #     print data
+    ws_app = websocket.WebSocketApp(url=url,
+                                    on_message=on_message)
+    ws_app.run_forever()
 

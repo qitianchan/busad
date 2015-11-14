@@ -13,6 +13,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
             url: 'http://localhost:5000/api/publish'
         });
 
+        $scope.submitDisable = false;
         //筛选过的路线
         $scope.filterRoutes = [];
         // 筛选过的公交
@@ -85,6 +86,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
         }, true);
 
         $scope.publishAD = function(){
+            $scope.submitDisable = true;
             item = $scope.uploader.queue[0];
             euis = [];
             angular.forEach($scope.filterBuses, function(bus){

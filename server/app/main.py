@@ -8,9 +8,20 @@ from flask.ext.httpauth import HTTPBasicAuth
 from extensions import db, bcrypt, auth
 from resources import api
 from server.app.models import User
+from threading import Thread
+import redis
+import websocket
+from utils.ws_listenning import ws_listenning
+GATEWAY_ID = "be7a0029"
+TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
+
+url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
 
 # 创建app，并且配置扩展
 def create_app():
+    ws_listenning_thread = Thread(target=ws_listenning)
+    ws_listenning_thread.start()
+
     app = Flask(__name__)
     app.config.from_object('server.app.config')
     db = SQLAlchemy(app)

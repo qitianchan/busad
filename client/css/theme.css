@@ -326,7 +326,7 @@ h6, .h6 {
 
 .itemActive {
     background-color: white !important;
-    color: #58666E;
+    color: #58666E !important;
 }
 
 
