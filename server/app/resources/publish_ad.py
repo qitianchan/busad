@@ -13,7 +13,7 @@ import redis
 import threading
 from server.app.utils import strict_redis
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
-from server.app.utils.ws_listenning import ws
+from server.app.utils.ws_listenning import ws as wss
 
 
 GATEWAY_ID = "be7a0029"
@@ -34,16 +34,18 @@ r = strict_redis
 class Publish(Resource):
 
     # TODO:文件接收
-    def post(self, ws):
+    def post(self):
         f = request.files['file']
 
         euis = request.form.get('euis')
         if euis:
             euis = euis.split(',')
-            if ws == None:
-                ws = _connet_socket(ws_url)
+            ws = wss
+            # if ws == None:
+            #     ws = _connet_socket(ws_url)
+            chunks = slipe_file(f, PACKET_SIZE)
 
-            new_thread = threading.Thread(target=send_file, args=(ws, f, euis))
+            new_thread = threading.Thread(target=send_file, args=(ws, r, chunks, euis))
             print '开始新的线程...'
             new_thread.start()
 
@@ -77,7 +79,7 @@ def wrap_data(data, eui, index, end=False):
 
     data_head = hex(data_head)[2:]
     send_data['data'] = data_head + data.encode('hex')
-    return send_data
+    return json.dumps(send_data)
 
 
 def slipe_file(file, step):
@@ -97,7 +99,7 @@ def slipe_file(file, step):
     return chunks
 
 
-def send_file(ws, redis_conn, file, euis):
+def send_file(ws, redis_conn, chunks, euis):
     """
     发送文件
     :param ws: websocket
@@ -106,10 +108,11 @@ def send_file(ws, redis_conn, file, euis):
     :param euis: 发送的eui列表
     :return:
     """
+
+    if not ws:
+        ws = _connet_socket(ws_url)
     done_count = 0
     packet_indexs = dict()
-
-    chunks = slipe_file(file, PACKET_SIZE)
 
     if euis:
         # euis = euis.split(',')
@@ -117,9 +120,6 @@ def send_file(ws, redis_conn, file, euis):
         # 初始化index
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = 0
-
-        if ws == None:
-            ws = _connet_socket(ws_url)
 
         print '正在接收消息。。。'
         pubsub = redis_conn.pubsub()
@@ -129,15 +129,17 @@ def send_file(ws, redis_conn, file, euis):
             if not isinstance(item['data'], basestring):
                 continue
             recv_data = item['data']
+            recv_data = json.loads(recv_data)
 
         # while done_count < len(euis):          # 全部发送完成
             if done_count >= len(euis):         # 如果全部已完成，停止
+                print '发送完成'
                 break
 
-            if hasattr(recv_data, 'h'):
+            if recv_data.get('h'):
                 continue
             eui = recv_data.get('EUI')
-            if eui in euis and hasattr(recv_data, 'data'):
+            if eui in euis and recv_data.get('data', None):
                 data = recv_data['data']
 
                 if data[:2] == 'a1' or data[:2] == 'A1':
@@ -155,7 +157,7 @@ def send_file(ws, redis_conn, file, euis):
                     ws.send(send_data)
                     packet_indexs[eui] += 1
 
-                else:
+                elif data[:2] == 'a1' or data[:2] == 'A2':
                     # 重发数据，index为数据指定的index, 并重置各个eui的 packet index
                     index = int(recv_data[2:4], 16)
                     send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks) - 1)))
@@ -170,7 +172,6 @@ def send_file(ws, redis_conn, file, euis):
 
 def listen_redis(ws, connect_redis, euis):
     """
-
     :param ws:
     :param connect_redis:
     :param euis:
@@ -194,6 +195,7 @@ def listen_redis(ws, connect_redis, euis):
         if count > 5:
             print '发送结束'
             break
+
 
 def recv_redis_message(redis_conn, euis):
     pubsub = redis_conn.pubsub()

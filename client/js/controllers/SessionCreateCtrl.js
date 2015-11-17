@@ -1,6 +1,6 @@
 var SessionCreateCtrl  = angular.module('SessionCreateCtrl', []);
-SessionCreateCtrl.controller('SessionCreateCtrl', ['$scope', '$location', 'Session', 'AuthService', 'Restangular',
-    function($scope, $location, Session, AuthService, Restangular) {
+SessionCreateCtrl.controller('SessionCreateCtrl', ['$scope', '$location', 'Session', 'AuthService', 'Restangular', 'toaster',
+    function($scope, $location, Session, AuthService, Restangular, toaster) {
     $scope.loginSubmit = function() {
         $scope.submitted = true;
         //$scope.authenticationForm.$setDirty();
@@ -17,6 +17,7 @@ SessionCreateCtrl.controller('SessionCreateCtrl', ['$scope', '$location', 'Sessi
             $location.path('/')
         }, function(response) {
             $scope.failedLoginAttempt = true;
+            toaster.pop('error', '登录失败', '登录名或者密码错误');
         });
     };
     //$scope.users = function(){

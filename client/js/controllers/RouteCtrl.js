@@ -11,6 +11,9 @@
             $scope.districtSelected = (i == 3);
         };
 
+        $scope.waiting = false;
+        $scope.visible = false;
+
         Bus.getList().then(function(ret){
             $scope.buses = ret
         });
@@ -47,9 +50,16 @@
         };
 
         $scope.saveBus = function(data, bus){
-            Bus.
-            toaster.pop('error', '数据错误', 'hello');
-            return ''
+            $scope.waiting = true;
+
+            Bus.one(bus.id).customPUT(data).then(function(ret){
+                $scope.waiting = false;
+                toaster.pop('success', '保存成功', '');
+            },function(ret){
+                toaster.pop('error', '保存失败', '数据冲突');
+                return ''
+            })
+            var hel = 'haha';
         };
 
         /* TODO：save, edit del add */

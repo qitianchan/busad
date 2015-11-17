@@ -7,7 +7,8 @@ from server.app.extensions import db, bcrypt, auth
 from server.app.models import Bus
 from  sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-
+import json
+import time
 
 bus_fields = {
     'id': fields.Integer,
@@ -56,6 +57,10 @@ class BusAPI(Resource):
     # @marshal_with(bus_fields)
     def put(self, id):
         bus = Bus.get(id)
+        if not bus:
+            res = jsonify(message='不存在该公交')
+            res.status_code = 422
+            return res
         route_id = request.json.get('route_id')
         plate_number = request.json.get('plate_number')
         light_number = request.json.get('light_number')
@@ -63,8 +68,8 @@ class BusAPI(Resource):
 
         bus.update_bus(route_id=route_id, plate_number=plate_number, light_number=light_number, eui=eui)
         try:
-            db.session.add(bus)
             db.session.commit()
+            time.sleep(2)
             return marshal(bus, bus_fields), 201
         except IntegrityError, e:
             params = e.params[:-1]
@@ -72,7 +77,9 @@ class BusAPI(Resource):
             for i in xrange(len(params)):
                 err_str = err_str + ',' + params[i]
             err_str += u'已经存在'
-            return jsonify({'code': '30', 'errmsg': err_str, 'data':None, 'message': ''})
+            response = jsonify({'code': '422', 'errmsg': err_str, 'data': None, 'message': ''})
+            response.status_code = 422
+            return '', 422
 
     @marshal_with(bus_fields)
     def delete(self, id):

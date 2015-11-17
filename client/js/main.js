@@ -20,7 +20,8 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
                     $location.path('/sessions/create');
                     break;
                 default:
-                    throw new Error('No handler for status code ' + response.status);
+                    //throw new Error('No handler for status code ' + response.status);
+                    return true;
             }
             return false;
         }
@@ -41,7 +42,7 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
             var deferred = $q.defer();
 
             if (AuthService.isAuthenticated()) {
-                deferred.reject()
+                deferred.reject();
                 $location.path(route);
             } else {
                 deferred.resolve()

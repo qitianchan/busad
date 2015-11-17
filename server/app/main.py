@@ -11,7 +11,7 @@ from server.app.models import User
 from threading import Thread
 import redis
 import websocket
-from utils.ws_listenning import ws_listenning
+from utils.ws_listenning import wrap_listen, ws_listening
 GATEWAY_ID = "be7a0029"
 TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
 
@@ -19,12 +19,19 @@ url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
 
 # 创建app，并且配置扩展
 def create_app():
-    ws_listenning_thread = Thread(target=ws_listenning)
-    ws_listenning_thread.start()
+
+    # 单例模式的监听函数
+    try:
+        # listen = Listening()
+        ws_listening_thread = Thread(target=wrap_listen)
+        ws_listening_thread.start()
+    except Exception, e:
+        print e.message
 
     app = Flask(__name__)
     app.config.from_object('server.app.config')
     db = SQLAlchemy(app)
+    init_app(app)
     config_extensions(app)
 
     return app
@@ -52,17 +59,17 @@ def config_extensions(app):
         return True
 
 
-app = create_app()
+# app = create_app()
 
-
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-    return response
+def init_app(app):
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        return response
 
 
 if __name__ == '__main__':
-
+    app = create_app()
     app.run(debug=True, port=9320)
