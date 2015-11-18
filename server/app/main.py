@@ -11,22 +11,24 @@ from server.app.models import User
 from threading import Thread
 import redis
 import websocket
-from utils.ws_listenning import wrap_listen, ws_listening
-GATEWAY_ID = "be7a0029"
-TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
+from utils.ws_listenning import wrap_listen, ws_listening, Listening
+from server.app.config import LORIOT_URL
 
-url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
+# GATEWAY_ID = "be7a0029"
+# TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
+#
+# url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
 
 # 创建app，并且配置扩展
 def create_app():
 
     # 单例模式的监听函数
-    try:
-        # listen = Listening()
-        ws_listening_thread = Thread(target=wrap_listen)
-        ws_listening_thread.start()
-    except Exception, e:
-        print e.message
+    # try:
+    #     # listen = Listening()
+    #     ws_listening_thread = Thread(target=wrap_listen)
+    #     ws_listening_thread.start()
+    # except Exception, e:
+    #     print e.message
 
     app = Flask(__name__)
     app.config.from_object('server.app.config')
@@ -69,6 +71,22 @@ def init_app(app):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
         return response
 
+    @app.before_first_request
+    def before_first_request():
+        # 单例模式的监听函数
+        try:
+            # listen = Listening()
+            ws = websocket.WebSocket()
+            ws.connect(LORIOT_URL)
+            ctx = app.app_context()
+            g.ws = ws
+            ctx.push()
+
+            ws_listening_thread = Thread(target=ws_listening)
+            ws_listening_thread.start()
+        except Exception, e:
+            print e.message
+            raise e
 
 if __name__ == '__main__':
     app = create_app()

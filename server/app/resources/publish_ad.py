@@ -13,11 +13,6 @@ import redis
 import threading
 from server.app.utils import strict_redis
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
-from server.app.utils.ws_listenning import ws as wss
-
-
-GATEWAY_ID = "be7a0029"
-TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
 
 # 目标设备信息
 EUI = "BE7A00000000063A"
@@ -40,7 +35,7 @@ class Publish(Resource):
         euis = request.form.get('euis')
         if euis:
             euis = euis.split(',')
-            ws = wss
+            ws = None
             # if ws == None:
             #     ws = _connet_socket(ws_url)
             chunks = slipe_file(f, PACKET_SIZE)
