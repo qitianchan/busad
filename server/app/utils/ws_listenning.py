@@ -8,50 +8,63 @@ from . import strict_redis
 from server.app.config import LORIOT_WEBSOCKET_URL
 import threading
 
-# GATEWAY_ID = "be7a0029"
-# TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
-
-# url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
 url = LORIOT_WEBSOCKET_URL
 r = strict_redis
 ws = None
 
 
 class Singleton(object):
-    mutex = threading.Lock()                # 添加线程锁，保证线程安全
+    mutex = threading.RLock()                # 添加线程锁，保证线程安全
+    INSTANCE = None
 
-    def __new__(cls, *args, **kw):
-        cls.mutex.acquire()
-        if not hasattr(cls, '_instance'):
-            orig = super(Singleton, cls)
-            cls._instance = orig.__new__(cls, *args, **kw)
-        cls.mutex.release()
-        return cls._instance
+    lock = threading.RLock()
+
+    def __new__(cls):
+        cls.lock.acquire()
+        if cls.INSTANCE is None:
+            cls.INSTANCE = super(Singleton, cls).__new__(cls)
+        cls.lock.release()
+        return cls.INSTANCE
 
 
 class Listening(Singleton):
+    instance = None
+    mutex = threading.Lock()                # 添加线程锁，保证线程安全
+    call = 0
+
     def __init__(self):
         ws = websocket.WebSocket()
         ws.connect(url)
         print 'ws 连接成功(Listening)'
 
+    @staticmethod
+    def getInstance():
+        Listening.mutex.acquire()
+        if not Listening.instance:
+            Listening.instance = Listening()
+            Listening.call += 1
+            Listening.mutex.release()
+            return Listening.instance
+        return None
+
     def ws_listening(self):
-        res = r.ping()                  # 检测是否能够连接上 redis server
-        print u'开始监听消息'
+        if self.call < 2:
+            res = r.ping()                  # 检测是否能够连接上 redis server
+            print u'开始监听消息'
 
-        # 一直连接直到连接成功
-        try:
-            # simulate(r)
-            ws_app = websocket.WebSocketApp(url=url,
-                                            on_message=on_message, on_open=on_open)
+            # 一直连接直到连接成功
+            try:
+                # simulate(r)
+                ws_app = websocket.WebSocketApp(url=url,
+                                                on_message=on_message, on_open=on_open)
 
-            ws_app.run_forever()
-        except ConnectionError, e:
-            print u'连接redis失败'
-            raise ConnectionError('redis-server未启动')
-        except Exception, e:
-            # 连接不上是继续连接，递归调用
-            self.ws_listening()
+                ws_app.run_forever()
+            except ConnectionError, e:
+                print u'连接redis失败'
+                raise ConnectionError('redis-server未启动')
+            except Exception, e:
+                # 连接不上是继续连接，递归调用
+                self.ws_listening()
 
 
 def ws_listening():
@@ -72,9 +85,11 @@ def ws_listening():
             # 连接不上是继续连接，递归调用
             ws_listening()
 
+
 def wrap_listen():
     listen = Listening()
-    listen.ws_listening()
+    if listen:
+        listen.ws_listening()
 
 
 def on_message(ws, message):
@@ -87,8 +102,8 @@ def on_message(ws, message):
             print '连接redis失败'
             raise e
 
-def on_open(wss):
-    ws = wss
+
+def on_open(ws):
     print '连接websocket成功'
 
 

@@ -13,16 +13,17 @@ sequenceCounter = 1
 
 
 GATEWAY_ID = "be7a0029"
-TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
+TOKEN = "Rd6c66b0j2xi98cG6DW0Kg"
 
-url = "wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN
+url = 'wss://ap1.loriot.io/app?id=be7a009f&token=Rd6c66b0j2xi98cG6DW0Kg'
+
 
 send_data = {"cmd": "tx", "EUI": "BE7A00000000063A", "port": 1, "data": "5659"}
 
 ws = websocket.WebSocket()
 
 
-ws.connect("wss://www.loriot.io/app?id="+GATEWAY_ID+"&token="+TOKEN)
+ws.connect(url)
 # while True:
 #     ws.send(json.dumps(send_data))
 #     time.sleep(5)

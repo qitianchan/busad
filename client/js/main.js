@@ -32,7 +32,8 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
 
 .config(function($routeProvider, RestangularProvider) {
 
-    RestangularProvider.setBaseUrl('http://localhost:5000/api');
+    //RestangularProvider.setBaseUrl('http://localhost:5000/api');
+    RestangularProvider.setBaseUrl('http://183.230.40.230:9090/api');
 
     var partialsDir = 'partials';
 
