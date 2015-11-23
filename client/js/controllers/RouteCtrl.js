@@ -15,16 +15,18 @@
         $scope.visible = false;
 
         Bus.getList().then(function(ret){
-            $scope.buses = ret
+            $scope.buses = ret;
+            $scope.original_buses = angular.extend(ret);
+
         });
 
 
         Route.getList().then(function(ret){
-            $scope.routes = ret
+            $scope.routes = $scope.original_routes =ret
         });
 
         District.getList().then(function(ret){
-            $scope.districts = ret
+            $scope.districts = $scope.original_districts = ret
         });
 
         $scope.showRoute = function(bus){
@@ -56,9 +58,10 @@
                 $scope.waiting = false;
                 toaster.pop('success', '保存成功', '');
             },function(ret){
+                $scope.buses = $scope.original_buses;
                 toaster.pop('error', '保存失败', '数据冲突');
                 return ''
-            })
+            });
             var hel = 'haha';
         };
 

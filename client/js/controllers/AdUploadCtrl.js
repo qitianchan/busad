@@ -10,7 +10,8 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
     //});
 
         var uploader = $scope.uploader = new FileUploader({
-            url: 'http://localhost:5000/api/publish'
+            url: 'http://localhost:5000/api/publish',
+            //url: 'http://183.230.40.230:9090/api/publish'
         });
 
         $scope.submitDisable = false;

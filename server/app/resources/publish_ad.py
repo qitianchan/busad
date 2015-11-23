@@ -14,7 +14,7 @@ import threading
 from server.app.utils import strict_redis
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 
-PACKET_SIZE = 16
+PACKET_SIZE = 15
 
 r = strict_redis
 
@@ -136,17 +136,17 @@ def send_file(ws, redis_conn, chunks, euis):
                     # 初始化, 复位
                     if packet_indexs[eui] == -1:
                         packet_indexs[eui] = 0
-                        reset_data = wrap_data('00', eui, index=index, end=True)
+                        reset_data = wrap_data('00', eui, index=0, end=True)
                         ws.send(reset_data)
                         continue
 
                     # 若已经复位，确认index已归零，如若未归零，继续等待
-                    # if packet_indexs[eui] == 0 and index != 0:
-                    #         continue
+                    if packet_indexs[eui] == 0 and index != 0:
+                            continue
 
                     # 判断是否已经发送完最后一个包,是的话，不做处理
                     # index = packet_indexs[eui]
-                    if index+1 >= len(chunks):
+                    if index >= len(chunks):
                         done_count += 1
                         continue
                 #
@@ -160,7 +160,7 @@ def send_file(ws, redis_conn, chunks, euis):
                 #
                 # elif data[:2] == 'a2' or data[:2] == 'A2':
                     # 重发数据，index为数据指定的index, 并重置各个eui的 packet index
-                    send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks) - 1)))
+                    send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks))))
 
                     print u'发送数据：' , send_data
                     print 'index:', index + 1
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     ws_url = 'wss://ap1.loriot.io/app?id=be7a009f&token=Rd6c66b0j2xi98cG6DW0Kg'
     ws.connect(ws_url)
     send_data = {'cmd': 'tx', 'EUI': 'BE7A000000000301', 'port': '1', 'data': '043412'}
-    send_data = {"data": "8600000000000000000000000000000060000000000000000000007a00010302", "cmd": "tx", "EUI": "BE7A000000000301", "port": "1"}
+    send_data = {"data": "8600000000000000000000000000000060000000000000000000007a00010302", "cmd": "tx", "EUI": "BE7A000000000301", "port": LORIOT_PORT}
     while True:
         ws.send(json.dumps(send_data))
         print '发送完成', json.dumps(send_data)
