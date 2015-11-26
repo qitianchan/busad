@@ -1,6 +1,6 @@
 // TODO:使用观察者模式解决筛选的问题
-UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'PublishAD', 'FileUploader',
-    function($scope, District, Route, Bus, PublishAD, FileUploader) {
+UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'FileUploader', 'toaster',
+    function($scope, $interval, District, Route, Bus, PublishAD, FileUploader, toaster) {
 
     //$(document).ready(function(){
     //    $('input').iCheck({
@@ -13,7 +13,11 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
             url: 'http://localhost:5000/api/publish',
             //url: 'http://183.230.40.230:9090/api/publish'
         });
+        $scope.progress_code = '';
+        // 进度( 0 - 100 )
 
+        $scope.progress = 0;
+        $scope.uploading = false;
         $scope.submitDisable = false;
         //筛选过的路线
         $scope.filterRoutes = [];
@@ -86,8 +90,9 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
             });
         }, true);
 
+
         $scope.publishAD = function(){
-            $scope.submitDisable = true;
+            $scope.uploading = true;
             item = $scope.uploader.queue[0];
             euis = [];
             angular.forEach($scope.filterBuses, function(bus){
@@ -98,12 +103,30 @@ UserApp.controller('AdUploadCtrl', ['$scope','District', 'Route','Bus', 'Publish
 
             item.formData = [{'euis': euis}];
             $scope.uploader.uploadItem(item);
+            $scope.uploader.onCompleteItem = function(item, respone, status, headers){
+                $scope.progress_code = respone.progress_code;
+                if($scope.progress_code){
+                     $scope.timer = $interval(getProgess, 4000, 1000);
+                }
+            };
+        };
+        // 获取进度
+        var getProgess = function(){
+            PublishAD.progress($scope.progress_code).then(function(ret){
+                    $scope.progress = ret['progress'];
+                    if($scope.progress >= 100){
+                        $interval.cancel($scope.timer);
+                        $scope.uploading = false;
+                        toaster.pop('success', '发送成功', '');
+                    }
+                }
+            );
+        };
 
-            //PublishAD.publish($scope.filterBuses).then(
-            //    alert('发布成功')
-            //);
-
+        $scope.testProgress = function(){
+            if($scope.progress >= 100){
+                $scope.progress = 0;
+            }
+            $scope.progress += 10;
         }
-
-
 }]);

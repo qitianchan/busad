@@ -8,7 +8,13 @@ UserApp.factory('PublishAD', function(Restangular) {
             return Restangular
                 .one('publish')
                 .customPOST(data);
+        },
+        progress: function(data){
+            return Restangular
+                .one('progress')
+                .customGET(data);
         }
+
     };
     return publishAd;
 });

@@ -208,6 +208,10 @@ h6, .h6 {
 
 .btn-primary {
     color: #ffffff !important;
+    background-color: #6254B2;
+    border-color: #6254B2;
+}
+.btn-primary:disabled {
     background-color: #9588B2;
     border-color: #9588B2;
 }
@@ -339,4 +343,36 @@ h6, .h6 {
 
 .ft-right {
     float: right;
+}
+
+.loading-status {
+    width: 100%;
+    border: 1px #c0c0c0 solid;
+    height: 15px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+
+    -webkit-box-shadow: 0 2px 2px  #d0d4d6;
+    -moz-box-shadow: 0 2px 2px #d0d4d6;
+    box-shadow: 0 2px 2px #d0d4d6;
+    margin: 10px ;
+}
+
+
+.upload_process {
+    background: #6254B2;
+    width: 50%;
+    height: 100%;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-transition: width 1s ease-in-out;
+    -moz-transition: width 1s ease-in-out;
+    -ms-transition: width 1s ease-in-out;
+    -o-transition: width 1s ease-in-out;
+    transition: width 1s ease-in-out;
+}
+.progress-bar {
+    background-color: #6254B2;
 }

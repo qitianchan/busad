@@ -15,6 +15,7 @@ from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 from redis import StrictRedis
 from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 from datetime import datetime
+from server.app.utils.tools import timelimit
 
 
 PACKET_SIZE = 15
@@ -40,7 +41,7 @@ class Publish(Resource):
             new_thread = threading.Thread(target=send_file, args=(ws, chunks, euis, process_code))
             print '开始新的线程...'
             new_thread.start()
-            return jsonify({'process_code': process_code})
+            return jsonify({'progress_code': process_code})
         else:
             return '', 303
 
@@ -57,6 +58,7 @@ def _connet_socket(ws_url):
         return ws
     except Exception:
         _connet_socket(ws_url)
+
 
 def wrap_data(data, eui, index, end=False, port='1'):
     # 包装将要发送的数据
@@ -91,6 +93,11 @@ def slipe_file(file, step):
     return chunks
 
 
+def send_file_with_timelimit(ws, chunks, euis, progress_code, timeout=3600):
+    print '限时'
+    timelimit(timeout, func=send_file, args=(ws, chunks, euis, progress_code))
+
+
 def send_file(ws, chunks, euis, progress_code):
     """
     发送文件
@@ -115,7 +122,6 @@ def send_file(ws, chunks, euis, progress_code):
         # 初始化index
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = -1
-
 
         print '正在接收消息。。。'
         pubsub = redis_conn.pubsub()
@@ -173,17 +179,6 @@ def send_file(ws, chunks, euis, progress_code):
                     print 'progress_code', progress_code
                     print '=' * 60
                     publish_progress(redis_conn, progress_code, current_progress)
-
-            # TODO： 记录完成状态
-
-
-def recv_redis_message(redis_conn, euis):
-    pubsub = redis_conn.pubsub()
-    pubsub.subscribe(euis)
-    while True:
-        for item in pubsub.listen():
-            print item['data']
-            # todo: 处理接收到的信息
 
 
 def get_index(data):
