@@ -34,6 +34,10 @@ class Bus(db.Model):
     def get(cls, bus_id):
         return cls.query.filter(Bus.id == bus_id).first()
 
+    @classmethod
+    def get_buses_by_route(cls, route_id):
+        return cls.query.filter(Bus.route_id == route_id).all()
+
     def update_bus(self,route_id=None, plate_number=None, light_number=None, eui=None):
         if route_id:
             self.route_id = route_id

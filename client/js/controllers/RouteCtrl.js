@@ -13,7 +13,9 @@
 
         $scope.waiting = false;
         $scope.visible = false;
-
+        $scope.buses = [];
+        $scope.routes = [];
+        $scope.districts = [];
         Bus.getList().then(function(ret){
             $scope.buses = ret;
             $scope.original_buses = angular.extend(ret);
@@ -87,10 +89,8 @@
                 });
             }
 
-            var hel = 'haha';
         };
 
-        /* TODO：save, edit del add */
         $scope.addBus = function(){
              $scope.inserted = {
               plate_number: null,
@@ -111,6 +111,56 @@
             },function(ret){
                 toaster.pop('error', '', '删除失败')
             })
-        }
+        };
+
+        $scope.saveRoute = function(data, route, index) {
+            var originData = {};
+            originData.district_id = route.district_id;
+            originData.route_name = route.route_name;
+
+            if(route.id){
+               Route.one(route.id).customPUT(data).then(
+                   function(ret){
+                       route.id = ret.id;
+                       toaster.pop('success', '', '保存成功')
+                   },
+                   function(ret){
+                       route.district_id = originData.district_id;
+                       route.route_name = originData.route_name;
+                       toaster.pop('error', '保存失败', '数据冲突')
+                   }
+               )
+            }
+            else {
+                // 新建item
+                Route.post(data).then(function(ret){
+                    toaster.pop('success', '', '保存成功')
+                },function(ret){
+                        $scope.routes.splice(index, 1);
+                        toaster.pop('error', '保存失败', '数据冲突')
+                    }
+                )
+            }
+
+        };
+        $scope.addRoute = function(){
+            $scope.inserted = {
+              route_name: null,
+              district_id: null
+            };
+            $scope.routes.push($scope.inserted);
+        };
+
+        $scope.removeRoute = function(index, route){
+            if(!route.id){
+                $scope.routes.splice(index, 1)
+            }
+            Route.one(route.id).customDELETE().then(function(ret){
+                $scope.routes.splice(index, 1);
+                toaster.pop('success', '', '删除成功');
+            },function(ret){
+                toaster.pop('error', '', '删除失败,有其他数据引用此数据')
+            })
+        };
 }]);
 }();

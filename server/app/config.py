@@ -1,5 +1,7 @@
 import os
 basedir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../')
+# max content length  10Kb
+MAX_CONTENT_LENGTH = 10 * 1024
 
 DEBUG = True
 WTF_CSRF_ENABLED = False

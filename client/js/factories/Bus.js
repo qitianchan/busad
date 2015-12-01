@@ -28,7 +28,7 @@
         var service = Restangular.service('buses');
         service.validateData = function(student) {
             // validate student data
-        }
+        };
 
         return service;
 

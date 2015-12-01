@@ -6,7 +6,7 @@ import flask_restful as restful
 from server.app.extensions import db, bcrypt, auth
 from server.app.models import Route
 from  sqlalchemy import and_
-
+from sqlalchemy.exc import IntegrityError
 
 route_fields = {
     'id': fields.Integer,
@@ -33,6 +33,18 @@ class RouteList(Resource):
             abort(404)
         return routes
 
+    @marshal_with(route_fields)
+    def post(self):
+        district_id = request.json.get('district_id')
+        route_name = request.json.get('route_name')
+        if not route_name or not district_id:
+            abort(422)
+
+        route = Route(district_id, route_name)
+        db.session.add(route)
+        db.session.commit()
+        return route
+
 
 class RouteAPI(Resource):
     decorators = [auth.login_required, marshal_with(route_fields)]
@@ -44,20 +56,10 @@ class RouteAPI(Resource):
             abort(404)
         return route
 
-    def post(self):
-        district_id = request.json.get('districtId')
-        route_name = request.json.get('routeName')
-        if not route_name or district_id:
-            abort(400)
-
-        route = Route(district_id, route_name)
-        db.session.add(route)
-        db.session.commit()
-        return route, 201.
 
     def put(self, id):
-        district_id = request.json.get('districtId')
-        route_name = request.json.get('routeName')
+        district_id = request.json.get('district_id')
+        route_name = request.json.get('route_name')
         route = Route.get(id)
         if not route:
             abort(404)
@@ -72,15 +74,20 @@ class RouteAPI(Resource):
     @auth.login_required
     def delete(self, id):
         route = Route.get(id)
-
         if route:
-            if route.buses:
-                return jsonify({'resCode': '30', 'resMsg': 'theere is some buses index for it'})
-            else:
-                db.session.delete(route)
-                db.session.commit()
-                return jsonify({"resCode": '20', 'resMsg': 'delete success'})
-
+            try:
+                Route.delete(id)
+                return jsonify({'success': u'删除成功'})
+            except IntegrityError, e:
+                response = jsonify({'error': u'存在引用的外鍵'})
+                response.status_code = 422
+            # if delete failed
+            # if not Route.get(id):
+            #     return jsonify({'success': u'删除成功'})
+            # response = jsonify({'error': u'存在引用的外鍵'})
+            # response.status_code = 422
+            # return response
         else:
-            return jsonify({"resCode": '30', 'resMsg': 'route is not exit'})
-
+            response = jsonify({'error': u'该路线不存在'})
+            response.status_code = 404
+            return response

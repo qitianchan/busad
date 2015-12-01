@@ -101,7 +101,7 @@
                 </td>
                 <td style="white-space: nowrap">
                   <!-- form -->
-                  <form editable-form name="rowform" onbeforesave="saveBus($data, bus)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == route">
+                  <form editable-form name="rowform" onbeforesave="saveRoute($data, route, $index)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == route">
                     <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
                       保存
                     </button>
@@ -111,13 +111,13 @@
                   </form>
                   <div class="buttons" ng-show="!rowform.$visible">
                     <button class="btn btn-primary" ng-click="rowform.$show()">编辑</button>
-                    <button class="btn btn-danger" ng-click="removeUser($index)">删除</button>
+                    <button class="btn btn-danger" ng-click="removeRoute($index, route)">删除</button>
                   </div>
                 </td>
               </tr>
               </table>
 
-              <button class="btn btn-default" ng-click="addUser()">添加</button>
+              <button class="btn btn-default" ng-click="addRoute()">添加</button>
 
             </table>
           </div>

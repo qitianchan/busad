@@ -19,7 +19,7 @@ api.add_resource(AuthToken, '/token')
 api.add_resource(DistrictAPI, '/districts', '/districts/<int:id>')
 
 api.add_resource(RouteList, '/routes')
-api.add_resource(RouteAPI, 'routes/<int:id>')
+api.add_resource(RouteAPI, '/routes/<int:id>')
 
 api.add_resource(BusList, '/buses')
 api.add_resource(BusAPI, '/buses/<int:id>')
