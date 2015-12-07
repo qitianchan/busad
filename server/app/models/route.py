@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 class Route(db.Model):
     __tablename__ = 'route'
     id = db.Column(db.Integer, primary_key=True)
-    district_id = db.Column(db.Integer, db.ForeignKey('district.id'))
+    district_id = db.Column(db.Integer, db.ForeignKey('district.id',  ondelete="CASCADE"), nullable=False)
     route_name = db.Column(db.String(128), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     status = db.Column(db.Integer, default=1)                   # 可用标志位， 0 不可用， 1 可用（删除）
@@ -39,5 +39,5 @@ class Route(db.Model):
         if bus:
             raise IntegrityError(u'数据完整性异常')
         del_obj = cls.get(route_id)
-        db.sessoin.delete(del_obj)
+        db.session.delete(del_obj)
         db.session.commit()

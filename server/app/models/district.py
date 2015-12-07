@@ -29,8 +29,7 @@ class District(db.Model):
 
     @classmethod
     def get(cls, district_id):
-        if hasattr(g, 'user'):
-            return cls.query.filter(District.id == district_id).first()
+        return cls.query.filter(District.id == district_id).first()
 
     def update_distrct(self, district_name):
         self.district_name = district_name

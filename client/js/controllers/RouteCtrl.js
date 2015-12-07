@@ -121,7 +121,6 @@
             if(route.id){
                Route.one(route.id).customPUT(data).then(
                    function(ret){
-                       route.id = ret.id;
                        toaster.pop('success', '', '保存成功')
                    },
                    function(ret){
@@ -134,6 +133,7 @@
             else {
                 // 新建item
                 Route.post(data).then(function(ret){
+                    route.id = ret.id;
                     toaster.pop('success', '', '保存成功')
                 },function(ret){
                         $scope.routes.splice(index, 1);
@@ -162,5 +162,57 @@
                 toaster.pop('error', '', '删除失败,有其他数据引用此数据')
             })
         };
+
+        // district
+        $scope.saveDistrict = function(data, district, index) {
+            var originData = {};
+            originData.district_name = district.district_name;
+
+            if(district.id){
+               District.one(district.id).customPUT(data).then(
+                   function(ret){
+                       toaster.pop('success', '', '保存成功')
+                   },
+                   function(ret){
+                       district.district_name = originData.district_name;
+                       toaster.pop('error', '保存失败', '数据冲突')
+                   }
+               )
+            }
+            else {
+                // 新建item
+                District.post(data).then(function(ret){
+                    district.id = ret.id;
+                    district.district_name = ret.district_name;
+                    toaster.pop('success', '', '保存成功')
+                },function(ret){
+                        district.id = ret.id;
+                        $scope.districts.splice(index, 1);
+                        toaster.pop('error', '保存失败', '数据冲突')
+                    }
+                )
+            }
+
+        };
+
+        $scope.removeDistrict = function(index, district){
+            if(!district.id){
+                $scope.districts.splice(index, 1)
+            }
+            District.one(district.id).customDELETE().then(function(ret){
+                $scope.districts.splice(index, 1);
+                toaster.pop('success', '', '删除成功');
+            },function(ret){
+                toaster.pop('error', '', '删除失败,有其他数据引用此数据')
+            })
+        };
+
+        $scope.addDistrict = function(){
+            $scope.inserted = {
+              district_name: null
+            };
+            $scope.districts.push($scope.inserted);
+        };
+
 }]);
 }();

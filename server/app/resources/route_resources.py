@@ -29,15 +29,15 @@ class RouteList(Resource):
     @marshal_with(route_fields)
     def get(self):
         routes = Route.get_routes()
-        if not routes:
-            abort(404)
+        # if not routes:
+        #     abort(404)
         return routes
 
     @marshal_with(route_fields)
     def post(self):
         district_id = request.json.get('district_id')
         route_name = request.json.get('route_name')
-        if not route_name or not district_id:
+        if not route_name:
             abort(422)
 
         route = Route(district_id, route_name)

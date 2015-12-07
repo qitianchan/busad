@@ -39,6 +39,13 @@ class User(db.Model):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
+    def save(self, role=1):
+        self.role = role
+
+        db.session.add(self)
+        db.session.commit()
+
+
     @staticmethod
     def virify_auth_token(token):
         s = Serializer(SECRET_KEY)

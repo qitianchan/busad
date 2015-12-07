@@ -11,7 +11,7 @@ import threading
 url = LORIOT_WEBSOCKET_URL
 r = strict_redis
 ws = None
-
+ws_app = websocket.WebSocketApp(url=url)
 
 class Singleton(object):
     mutex = threading.RLock()                # 添加线程锁，保证线程安全

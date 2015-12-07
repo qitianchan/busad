@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask_restful import Api
 from .user import UserAPI, UserList, AuthToken
-from .district import DistrictAPI
+from .district import DistrictAPI, District_Resource
 from .route_resources import RouteAPI, RouteList
 from .bus_resources import BusList, BusAPI
 from .login import Login
@@ -15,8 +15,8 @@ api.add_resource(UserList, '/users')
 
 api.add_resource(AuthToken, '/token')
 
-# api.add_resource(DistrictAPI, '/districts')
-api.add_resource(DistrictAPI, '/districts', '/districts/<int:id>')
+api.add_resource(District_Resource, '/districts')
+api.add_resource(DistrictAPI, '/districts/<int:id>')
 
 api.add_resource(RouteList, '/routes')
 api.add_resource(RouteAPI, '/routes/<int:id>')

@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="1946445186">
+  <component name="DataSourceManagerImpl" format="xml" hash="2815113993">
     <data-source source="LOCAL" name="SQLite -APP" uuid="11a95243-a0ad-481d-aba6-cad5518a470f">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\lenovo\PycharmProjects\busad-svn\server\app.sqlite</jdbc-url>
-      <libraries />
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/server/app.sqlite</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="MySQL - @localhost" uuid="33866747-541c-44a1-bab3-f0fb9cbaf868">
+      <driver-ref>mysql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306</jdbc-url>
+      <driver-properties>
+        <property name="zeroDateTimeBehavior" value="convertToNull" />
+        <property name="tinyInt1isBit" value="false" />
+        <property name="characterEncoding" value="utf8" />
+        <property name="characterSetResults" value="utf8" />
+        <property name="yearIsDateType" value="false" />
+      </driver-properties>
     </data-source>
   </component>
 </project>

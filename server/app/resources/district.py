@@ -21,7 +21,7 @@ district_parser.add_argument(
 )
 
 
-class DistrictAPI(Resource):
+class District_Resource(Resource):
     decorators = [auth.login_required]
 
     @marshal_with(district_fields)
@@ -43,7 +43,31 @@ class DistrictAPI(Resource):
             return marshal(district, district_fields), 201
         except IntegrityError, e:
             db.session.rollback()
-            return jsonify({'resCode': '31', 'resMsg': u'区域名已经存在'})
+            res = jsonify({'resCode': '31', 'resMsg': u'区域名已经存在'})
+            res.status_code = 422
+            return res
+
+
+
+
+class DistrictAPI(Resource):
+
+    @marshal_with(district_fields)
+    def delete(self, id):
+        district = District.get(id)
+        if district:
+            # if district.routes:
+            #     res = jsonify({'error': 'theere is some routes index for it'})
+            #     res.status_code = 422
+            #     return res
+            # else:
+            #     db.session.delete(district)
+            #     db.session.commit()
+            #     return District.get_district_list()
+            db.session.delete(district)
+            db.session.commit()
+        else:
+            return jsonify({"resCode": '30', 'resMsg': 'District is not exit'})
 
     @marshal_with(district_fields)
     def put(self, id):
@@ -57,18 +81,3 @@ class DistrictAPI(Resource):
         db.session.commit()
 
         return district, 201
-
-    @marshal_with(district_fields)
-    def delete(self, id):
-        district = District.get(id)
-        if district:
-            if district.routes:
-                return jsonify({'resCode': '30', 'resMsg': 'theere is some routes index for it'})
-            else:
-                db.session.delete(district)
-                db.session.commit()
-                return District.get_district_list()
-
-        else:
-            return jsonify({"resCode": '30', 'resMsg': 'District is not exit'})
-
