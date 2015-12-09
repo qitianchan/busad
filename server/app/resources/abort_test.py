@@ -34,6 +34,7 @@ class TestThread(Thread):
     def stop(self):
         self._stop = True
 
+
 class AbortTest(Resource):
     def get(self):
 

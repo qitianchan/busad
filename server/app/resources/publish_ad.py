@@ -113,9 +113,8 @@ def send_file_with_timelimit(chunks, euis, progress_code):
         else:
             send_file(chunks, euis, progress_code)
     except Exception, e:
-        print '================================================================='
-        print e.message
         publish_progress(redis_conn, progress_code, 408)
+
 
 @timeout(TIME_OUT)
 def send_file(chunks, euis, progress_code):
@@ -277,6 +276,30 @@ def send_file_with_class_c(chunks, euis, progress_code):
                     packet_indexs[eui] = index + 1
 
 
+def init_euis(euis, ws):
+    """
+    初始化euis
+    :param euis: eui列表
+    :param ws: websocket 连接
+    :return:
+    """
+    for eui in euis:
+        send_data = wrap_data('212342', eui, index=1, end=True)
+        ws.send(send_data)
+
+
+@timeout(15)
+def filter_euis(euis, ws, pubsub):
+    """
+    筛选不存在的eui
+    :param euis: 要发送的eui列表
+    :return: 有效的eui列表
+    """
+    init_euis(euis, ws)
+
+
+
+
 def get_index(data):
     """
     :param data:收到的信息
@@ -312,40 +335,18 @@ def progress(packet_indexs, all):
     return int((sum / all) * 100)
 
 
-
 if __name__ == '__main__':
     euis = ['BE7A000000000302']
 
-    ws = websocket.WebSocket()
-    f = open('/home/qitian/PycharmProjects/busad/server/test/1HelloWorld.TXT', 'rb')
-    chunks = slipe_file(f, 15)
+    euis = ['1', '2', '3']
 
-    redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
-    if not redis_conn.ping():
-        raise Exception('redis没连接')
-
-    pubsub = redis_conn.pubsub()
-    pubsub.subscribe(euis)
-
-    # ws_app = websocket.WebSocketApp()
-    # ws_app.on_open = ws_app()
-
-    ws_url = 'wss://ap1.loriot.io/app?id=be7a009f&token=Rd6c66b0j2xi98cG6DW0Kg'
-    ws.connect(ws_url)
-
-    for eui in euis:
-        send_data = {"data": "04000000000000000000000000000000", "cmd": "tx", "EUI": "BE7A000000000302", "port": "1"}
-        # send_data = wrap_data('212342', 'BE7A000000000302', index=1, end=True)
-        ws.send(json.dumps(send_data))
-        print '发送初始化完成', send_data
+    @timeout(2)
+    def del_ele(euis):
+        del euis[2]
+        time.sleep(3)
+    try:
+        del_ele(euis)
+    except Exception, e:
+        print euis
 
 
-    # while True:
-    #     for item in pubsub.listen():
-    #         print item['data']
-    # while True:
-    #     time.sleep(10)
-        # index = 128
-        # print bin(index |
-    # 0x80)
-        # print bin(index)
