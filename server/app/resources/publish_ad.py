@@ -15,13 +15,16 @@ from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 from redis import StrictRedis
 from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL
 from datetime import datetime
-from server.app.utils.tools import timelimit
 from server.app.utils.ws_listenning import ws_app
-
+from threading import Thread
+from server.app.utils.tools import timeout
 
 PACKET_SIZE = 15
-TIME_OUT = 3600
+TIME_OUT = 10
 # r = strict_redis
+redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
+if not redis_conn.ping():
+    raise Exception('redis没连接')
 
 
 class Publish(Resource):
@@ -32,22 +35,30 @@ class Publish(Resource):
 
         euis = request.form.get('euis')
         if euis:
+
             euis = euis.split(',')
-            ws = None
-            # if ws == None:
-            #     ws = _connet_socket(ws_url)
             chunks = slipe_file(f, PACKET_SIZE)
             process_code = uuid4().hex
+            new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, process_code))
+            # if LORIOT_PROTOCOL == 'class_c':
+            #     new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, process_code))
+            # else:
+            #     new_thread = threading.Thread(target=send_file
+            #                                   , args=(chunks, euis, process_code))
 
-            new_thread = threading.Thread(target=send_file_with_class_c, args=(ws, chunks, euis, process_code))
             print '开始新的线程...'
-            new_thread.start()
+            try:
+                new_thread.start()
+            except Exception, e:
+                print '*'* 120
+                print e.message
+
             return jsonify({'progress_code': process_code})
         else:
             return '', 303
 
 
-def _connet_socket(ws_url):
+def _connect_socket(ws_url):
     """
     创建 websocket 连接
     :param ws_url:websocket URL
@@ -58,7 +69,7 @@ def _connet_socket(ws_url):
         ws.connect(url=ws_url)
         return ws
     except Exception:
-        _connet_socket(ws_url)
+        _connect_socket(ws_url)
 
 
 def wrap_data(data, eui, index, end=False, port='1'):
@@ -94,12 +105,20 @@ def slipe_file(file, step):
     return chunks
 
 
-def send_file_with_timelimit(ws, chunks, euis, progress_code, timeout=3600):
-    print '限时'
-    timelimit(timeout, func=send_file_with_class_c, args=(ws, chunks, euis, progress_code))
+def send_file_with_timelimit(chunks, euis, progress_code):
 
+    try:
+        if LORIOT_PROTOCOL == 'class_c':
+            send_file_with_class_c(chunks, euis, progress_code)
+        else:
+            send_file(chunks, euis, progress_code)
+    except Exception, e:
+        print '================================================================='
+        print e.message
+        publish_progress(redis_conn, progress_code, 408)
 
-def send_file(ws, chunks, euis, progress_code):
+@timeout(TIME_OUT)
+def send_file(chunks, euis, progress_code):
     """
     发送文件
     :param ws: websocket
@@ -109,11 +128,9 @@ def send_file(ws, chunks, euis, progress_code):
     :param progress_code: 进度信息标志码
     :return:
     """
-    start = datetime.now()
-    redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
+    # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
 
-    if not ws:
-        ws = _connet_socket(ws_url)
+    ws = _connect_socket(ws_url)
     done_count = 0
     packet_indexs = dict()
 
@@ -127,11 +144,6 @@ def send_file(ws, chunks, euis, progress_code):
         pubsub = redis_conn.pubsub()
         pubsub.subscribe(euis)
         for item in pubsub.listen():
-
-            now = datetime.now()
-            if (now - start).seconds > TIME_OUT:
-                print '超时'
-                break
 
             if not isinstance(item['data'], basestring):
                 continue
@@ -186,7 +198,8 @@ def send_file(ws, chunks, euis, progress_code):
                     publish_progress(redis_conn, progress_code, current_progress)
 
 
-def send_file_with_class_c(ws, chunks, euis, progress_code):
+@timeout(TIME_OUT)
+def send_file_with_class_c(chunks, euis, progress_code):
     """
     发送文件
     :param ws: websocket
@@ -196,20 +209,16 @@ def send_file_with_class_c(ws, chunks, euis, progress_code):
     :param progress_code: 进度信息标志码
     :return:
     """
-
     start = datetime.now()
 
-    redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
-    if not redis_conn.ping():
-            raise Exception('redis没连接')
+    # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
+    # if not redis_conn.ping():
+    #         raise Exception('redis没连接')
     pubsub = redis_conn.pubsub()
     pubsub.subscribe(euis)
-
-    if not ws:
-        ws = _connet_socket(ws_url)
+    ws = _connect_socket(ws_url)
     done_count = 0
     packet_indexs = dict()
-
     if euis:
         all_packet_be_send = len(chunks) * len(euis)            # 进度衡量量，总需要的进度
         # 初始化index
@@ -226,10 +235,6 @@ def send_file_with_class_c(ws, chunks, euis, progress_code):
 
         for item in pubsub.listen():
 
-            now = datetime.now()
-            if (now - start).seconds > TIME_OUT:
-                print '超时'
-                break
             if not isinstance(item['data'], basestring):
                 continue
             recv_data = item['data']
@@ -272,7 +277,6 @@ def send_file_with_class_c(ws, chunks, euis, progress_code):
                     packet_indexs[eui] = index + 1
 
 
-
 def get_index(data):
     """
     :param data:收到的信息
@@ -306,27 +310,6 @@ def progress(packet_indexs, all):
     for v in values:
         sum += v
     return int((sum / all) * 100)
-
-def on_open():
-    pass
-
-
-def init_eui(eui):
-    pass
-
-class SendFile(object):
-
-    def __init__(self, ws_url, chunks=None, euis=None):
-        # global ws_app
-        # if not ws_app:
-        self.ws_app = websocket.WebSocketApp(url=ws_url)
-        self.chunks = chunks
-        self.euis = euis
-
-    def send(self):
-        pass
-
-
 
 
 

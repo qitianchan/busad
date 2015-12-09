@@ -1,13 +1,7 @@
 // TODO:使用观察者模式解决筛选的问题
-UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'FileUploader', 'toaster',
-    function($scope, $interval, District, Route, Bus, PublishAD, FileUploader, toaster) {
+UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'AbortService', 'FileUploader', 'toaster',
+    function($scope, $interval, District, Route, Bus, PublishAD, AbortService, FileUploader, toaster) {
 
-    //$(document).ready(function(){
-    //    $('input').iCheck({
-    //        checkboxClass: 'icheckbox_flat-purple',
-    //        radioClass: 'iradio_flat-purple'
-    //    });
-    //});
 
         var uploader = $scope.uploader = new FileUploader({
             url: 'http://localhost:5000/api/publish',
@@ -114,10 +108,14 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         var getProgess = function(){
             PublishAD.progress($scope.progress_code).then(function(ret){
                     $scope.progress = ret['progress'];
-                    if($scope.progress >= 100){
+                    if($scope.progress == 100){
                         $interval.cancel($scope.timer);
                         $scope.uploading = false;
                         toaster.pop('success', '发送成功', '');
+                    } else if($scope.progress == 408){
+                         $interval.cancel($scope.timer);
+                        $scope.uploading = false;
+                        toaster.pop('error', '发送超时');
                     }
                 }
             );
@@ -128,5 +126,17 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
                 $scope.progress = 0;
             }
             $scope.progress += 10;
+        };
+
+        $scope.abortTest = function(){
+            AbortService.getList().then(function(ret){
+                toaster.pop('info', '', '开始')
+            })
+        };
+
+        $scope.abortEnd = function(){
+            AbortService.put().then(function(ret){
+                toaster.pop('info', '', '终止')
+            })
         }
 }]);

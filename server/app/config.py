@@ -5,8 +5,8 @@ MAX_CONTENT_LENGTH = 10 * 1024
 
 DEBUG = True
 WTF_CSRF_ENABLED = False
-# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite')
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:aaaaa@localhost/busad?charset=utf8&use_unicode=0'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite')
+# SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:aaaaa@localhost/busad?charset=utf8&use_unicode=0'
 SECRET_KEY = 'This is a secret key, and it shuold be long long long and long enouth'
 GATEWAY_ID = "be7a009f"
 LORIOT_TOKEN = "Rd6c66b0j2xi98cG6DW0Kg"
