@@ -225,7 +225,6 @@ def send_file_with_class_c(chunks, euis, progress_code):
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = -1
 
-        print '发送通知'
         try:
             filter_euis(euis, ws, pubsub)
         except Exception, e:
@@ -235,11 +234,11 @@ def send_file_with_class_c(chunks, euis, progress_code):
             for e in euis:
                 if e not in temp_euis:
                     error_message += (e + ', ')
-            error_message += 'do not exits'
+            error_message += 'out off power or not exits'
             publish_progress(redis_conn, error, error_message)
 
             print '过滤超时'
-            raise e
+            raise
 
         euis = temp_euis
         # send first package

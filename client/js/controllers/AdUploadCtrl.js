@@ -108,6 +108,10 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         var getProgess = function(){
             PublishAD.progress($scope.progress_code).then(function(ret){
                     $scope.progress = ret['progress'];
+                    if($scope.progress == 0){
+                        $scope.progress = 1;
+                    }
+
                     var error = ret['error'];
                     if($scope.progress == 100){
                         $interval.cancel($scope.timer);
