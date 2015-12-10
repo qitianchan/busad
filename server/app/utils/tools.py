@@ -49,7 +49,7 @@ class KThread(threading.Thread):
 
         trace."""
 
-        sys.settrace(self.globaltrace)
+        # sys.settrace(self.globaltrace)
 
         self.__run_backup()
 

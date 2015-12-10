@@ -18,9 +18,11 @@ from datetime import datetime
 from server.app.utils.ws_listenning import ws_app
 from threading import Thread
 from server.app.utils.tools import timeout
+import copy
 
-PACKET_SIZE = 15
-TIME_OUT = 10
+temp_euis = []
+PACKET_SIZE = 35
+TIME_OUT = 3600
 # r = strict_redis
 redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
 if not redis_conn.ping():
@@ -208,7 +210,6 @@ def send_file_with_class_c(chunks, euis, progress_code):
     :param progress_code: 进度信息标志码
     :return:
     """
-    start = datetime.now()
 
     # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
     # if not redis_conn.ping():
@@ -225,6 +226,29 @@ def send_file_with_class_c(chunks, euis, progress_code):
             packet_indexs[euis[x]] = -1
 
         print '发送通知'
+        try:
+            filter_euis(euis, ws, pubsub)
+        except Exception, e:
+            publish_progress(redis_conn, progress_code, 408)
+            error = progress_code + '.error'
+            error_message = 'EUI: '
+            for e in euis:
+                if e not in temp_euis:
+                    error_message += (e + ', ')
+            error_message += 'do not exits'
+            publish_progress(redis_conn, error, error_message)
+
+            print '过滤超时'
+            raise e
+
+        euis = temp_euis
+        # send first package
+        index = 1
+        for eui in euis:
+            time.sleep(4)
+            send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks))))
+            ws.send(send_data)
+            packet_indexs[eui] = index
         for e in euis:
             send_data = wrap_data('212342', e, index=1, end=True)
             ws.send(send_data)
@@ -239,11 +263,6 @@ def send_file_with_class_c(chunks, euis, progress_code):
             recv_data = item['data']
             recv_data = json.loads(recv_data)
 
-            if done_count >= len(euis):         # 如果全部已完成，停止
-                print '发送完成'
-                pubsub.close()
-                break
-
             if recv_data.get('h'):
                 continue
             eui = recv_data.get('EUI')
@@ -257,15 +276,19 @@ def send_file_with_class_c(chunks, euis, progress_code):
                     # index = packet_indexs[eui]
                     if index >= len(chunks):
                         done_count += 1
+                        if done_count >= len(euis):         # 如果全部已完成，停止
+                            print '发送完成'
+                            pubsub.close()
+                            break
                         continue
                     # 发送数据，index为数据指定的index, 并重置各个eui的 packet index
-                    send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks))))
+                    send_data = wrap_data(chunks[index], eui, index, end=(index == len(chunks)))
 
-                    print u'发送数据：' , send_data
                     print 'index:', index + 1
                     print u'先睡2秒'
                     time.sleep(4)
                     # 记录进度
+                    packet_indexs[eui] = index + 1
                     current_progress = progress(packet_indexs, all_packet_be_send)
                     print '=' * 60
                     print '当前进度：', current_progress
@@ -273,7 +296,9 @@ def send_file_with_class_c(chunks, euis, progress_code):
                     print '=' * 60
                     publish_progress(redis_conn, progress_code, current_progress)
                     ws.send(send_data)
-                    packet_indexs[eui] = index + 1
+                    print u'发送数据：' , send_data
+
+
 
 
 def init_euis(euis, ws):
@@ -288,16 +313,38 @@ def init_euis(euis, ws):
         ws.send(send_data)
 
 
-@timeout(15)
+@timeout(30)
 def filter_euis(euis, ws, pubsub):
     """
     筛选不存在的eui
     :param euis: 要发送的eui列表
     :return: 有效的eui列表
     """
+    global temp_euis
+
     init_euis(euis, ws)
+    while True:
+        for item in pubsub.listen():
+            if not isinstance(item['data'], basestring):
+                    continue
+            recv_data = item['data']
+            recv_data = json.loads(recv_data)
 
+            if recv_data.get('h'):
+                continue
+            eui = recv_data.get('EUI')
+            if eui in euis and recv_data.get('data', None):
+                data = recv_data['data']
 
+                if data[:2] == 'a1' or data[:2] == 'A1':
+                    index = get_index(data)
+                    if index == 0:
+                        if eui not in temp_euis:
+                            temp_euis.append(eui)
+                        if len(euis) == len(temp_euis):
+                            print '过滤完成'
+                            break
+        break
 
 
 def get_index(data):
@@ -338,15 +385,12 @@ def progress(packet_indexs, all):
 if __name__ == '__main__':
     euis = ['BE7A000000000302']
 
-    euis = ['1', '2', '3']
+    euis = ['1', '2', '3', [1,2,3]]
 
-    @timeout(2)
-    def del_ele(euis):
-        del euis[2]
-        time.sleep(3)
-    try:
-        del_ele(euis)
-    except Exception, e:
-        print euis
+    copy_euis = copy.copy(euis)
+    euis = []
 
-
+    del copy_euis[2]
+    print copy_euis
+    deep_euis = copy.deepcopy(euis)
+    print deep_euis

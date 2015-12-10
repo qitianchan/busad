@@ -108,6 +108,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         var getProgess = function(){
             PublishAD.progress($scope.progress_code).then(function(ret){
                     $scope.progress = ret['progress'];
+                    var error = ret['error'];
                     if($scope.progress == 100){
                         $interval.cancel($scope.timer);
                         $scope.uploading = false;
@@ -115,7 +116,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
                     } else if($scope.progress == 408){
                          $interval.cancel($scope.timer);
                         $scope.uploading = false;
-                        toaster.pop('error', '发送超时');
+                        toaster.pop('error', '发送超时', error);
                     }
                 }
             );

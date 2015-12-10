@@ -20,7 +20,9 @@ class Progress(Resource):
             return response
 
         progress = r.get(progress_code)
-        return jsonify({'progress': progress or 0})
+        progress_error = progress_code + '.error'
+        error = r.get(progress_error)
+        return jsonify({'progress': progress or 0, 'error': error})
 
 if __name__ == '__main__':
 
