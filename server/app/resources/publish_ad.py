@@ -226,6 +226,7 @@ def send_file_with_class_c(chunks, euis, progress_code):
             packet_indexs[euis[x]] = -1
 
         try:
+
             filter_euis(euis, ws, pubsub)
         except Exception, e:
             publish_progress(redis_conn, progress_code, 408)
@@ -242,16 +243,14 @@ def send_file_with_class_c(chunks, euis, progress_code):
 
         euis = temp_euis
         # send first package
-        index = 1
+        index = 0
         for eui in euis:
-            time.sleep(4)
-            send_data = wrap_data(chunks[index], eui, index, end=(index == (len(chunks))))
+            # time.sleep(4)
+            send_data = wrap_data(chunks[index], eui, index, end=(index+1 == (len(chunks))))
+            print '开始......'
+            print '发送数据：', send_data
             ws.send(send_data)
             packet_indexs[eui] = index
-        for e in euis:
-            send_data = wrap_data('212342', e, index=1, end=True)
-            ws.send(send_data)
-            print '发送初始化完成', send_data
 
         print '正在接收消息。。。'
 
@@ -281,11 +280,12 @@ def send_file_with_class_c(chunks, euis, progress_code):
                             break
                         continue
                     # 发送数据，index为数据指定的index, 并重置各个eui的 packet index
-                    send_data = wrap_data(chunks[index], eui, index, end=(index == len(chunks)))
+                    # send_data = wrap_data(chunks[index], eui, index, end=(index+1 == len(chunks)))
+                    send_data = wrap_data(chunks[index], eui, index, end=False)
 
                     print 'index:', index + 1
-                    print u'先睡2秒'
-                    time.sleep(4)
+                    # print u'先睡2秒'
+                    # time.sleep(4)
                     # 记录进度
                     packet_indexs[eui] = index + 1
                     current_progress = progress(packet_indexs, all_packet_be_send)
@@ -296,8 +296,6 @@ def send_file_with_class_c(chunks, euis, progress_code):
                     publish_progress(redis_conn, progress_code, current_progress)
                     ws.send(send_data)
                     print u'发送数据：' , send_data
-
-
 
 
 def init_euis(euis, ws):

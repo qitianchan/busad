@@ -1,6 +1,6 @@
 // TODO:使用观察者模式解决筛选的问题
-UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'AbortService', 'FileUploader', 'toaster',
-    function($scope, $interval, District, Route, Bus, PublishAD, AbortService, FileUploader, toaster) {
+UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'FileUploader', 'toaster',
+    function($scope, $interval, District, Route, Bus, PublishAD, FileUploader, toaster) {
 
 
         var uploader = $scope.uploader = new FileUploader({

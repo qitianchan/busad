@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="2815113993">
-    <data-source source="LOCAL" name="SQLite -APP" uuid="11a95243-a0ad-481d-aba6-cad5518a470f">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/server/app.sqlite</jdbc-url>
-    </data-source>
+  <component name="DataSourceManagerImpl" format="xml" hash="224573905">
     <data-source source="LOCAL" name="MySQL - @localhost" uuid="33866747-541c-44a1-bab3-f0fb9cbaf868">
       <driver-ref>mysql</driver-ref>
       <synchronize>true</synchronize>
@@ -19,6 +13,12 @@
         <property name="characterSetResults" value="utf8" />
         <property name="yearIsDateType" value="false" />
       </driver-properties>
+    </data-source>
+    <data-source source="LOCAL" name="Sqlite (Xerial) - app.sqlite" uuid="f5acf7fc-1154-467e-beff-e3dca5f349cd">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/server/app.sqlite</jdbc-url>
     </data-source>
   </component>
 </project>
