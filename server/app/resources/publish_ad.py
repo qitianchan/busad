@@ -2,7 +2,8 @@
 from __future__ import division
 from server.app.extensions import auth, bcrypt
 from flask_restful import Resource
-from flask import request, jsonify, g
+from flask import request, jsonify
+from server.app.models.user import User
 from flask_restful import fields
 import os
 import websocket
@@ -10,12 +11,9 @@ from uuid import uuid4
 import time
 import json
 import threading
-from server.app.utils import strict_redis
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 from redis import StrictRedis
 from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL
-from datetime import datetime
-from server.app.utils.ws_listenning import ws_app
 from threading import Thread
 from server.app.utils.tools import timeout
 import copy
@@ -28,6 +26,12 @@ redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password
 if not redis_conn.ping():
     raise Exception('redis没连接')
 
+# TODO: redis 修改为 hash
+# progress:
+#   progress_code
+#   progress_code.error
+#   progress_code.stop
+
 
 class Publish(Resource):
 
@@ -36,26 +40,33 @@ class Publish(Resource):
         f = request.files['file']
 
         euis = request.form.get('euis')
+        user_id = request.form.get('user_id')
         if euis:
 
             euis = euis.split(',')
             chunks = slipe_file(f, PACKET_SIZE)
-            process_code = uuid4().hex
-            new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, process_code))
-            # if LORIOT_PROTOCOL == 'class_c':
-            #     new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, process_code))
-            # else:
-            #     new_thread = threading.Thread(target=send_file
-            #                                   , args=(chunks, euis, process_code))
+            # 获取最后一次的progress_code, 并且终止掉（设置stop值为1）
+            progress_code = uuid4().hex
+            current_user = User.get(user_id)
+            if not current_user:
+                return '参数错误', 422
+
+            last_progress_code = current_user.progress_code
+            if last_progress_code:
+                set_stop_progress(redis_conn, last_progress_code)
+            # 更换progress_code
+            current_user.progress_code = progress_code
+            current_user.save()
+            new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
 
             print '开始新的线程...'
             try:
                 new_thread.start()
             except Exception, e:
-                print '*'* 120
+                print '*' * 120
                 print e.message
 
-            return jsonify({'progress_code': process_code})
+            return jsonify({'progress_code': progress_code})
         else:
             return '', 303
 
@@ -107,26 +118,27 @@ def slipe_file(file, step):
     return chunks
 
 
-def send_file_with_timelimit(chunks, euis, progress_code):
+def send_file_with_timelimit(chunks, euis, progress_code, last_progress_code):
 
     try:
         if LORIOT_PROTOCOL == 'class_c':
-            send_file_with_class_c(chunks, euis, progress_code)
+            send_file_with_class_c(chunks, euis, progress_code, last_progress_code)
         else:
-            send_file(chunks, euis, progress_code)
+            send_file(chunks, euis, progress_code, last_progress_code)
     except Exception, e:
         publish_progress(redis_conn, progress_code, 408)
 
 
 @timeout(TIME_OUT)
-def send_file(chunks, euis, progress_code):
+def send_file(chunks, euis, progress_code, last_progress_code):
     """
     发送文件
     :param ws: websocket
     :param redis_conn: redis连接
     :param file: 待发送的文件
     :param euis: 发送的eui列表
-    :param progress_code: 进度信息标志码
+    :param progress_code: 当前进度信息标志码
+    :param last_progress_code: 最后一次进度信息标志码
     :return:
     """
     # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
@@ -200,26 +212,26 @@ def send_file(chunks, euis, progress_code):
 
 
 @timeout(TIME_OUT)
-def send_file_with_class_c(chunks, euis, progress_code):
+def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
     """
     发送文件
     :param ws: websocket
     :param redis_conn: redis连接
     :param file: 待发送的文件
     :param euis: 发送的eui列表
-    :param progress_code: 进度信息标志码
+    :param progress_code: 当前进度信息标志码
+    :param last_progress_code: 最后一次的进度信息标志码
     :return:
     """
-
-    # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
-    # if not redis_conn.ping():
-    #         raise Exception('redis没连接')
     pubsub = redis_conn.pubsub()
     pubsub.subscribe(euis)
     ws = _connect_socket(ws_url)
     done_count = 0
     packet_indexs = dict()
-    if euis:
+
+    # euis存在或者没有被停止
+    if euis and not is_stopped(redis_conn, progress_code):
+
         all_packet_be_send = len(chunks) * len(euis)            # 进度衡量量，总需要的进度
         # 初始化index
         for x in xrange(len(euis)):
@@ -252,9 +264,12 @@ def send_file_with_class_c(chunks, euis, progress_code):
             ws.send(send_data)
             packet_indexs[eui] = index
 
-        print '正在接收消息。。。'
+        print '正在接收消息 。。。'
 
         for item in pubsub.listen():
+            if is_stopped(redis_conn, progress_code):
+                print '中止'
+                break
 
             if not isinstance(item['data'], basestring):
                 continue
@@ -360,10 +375,53 @@ def publish_progress(redis_conn, progress_code, progress, ex_time=3600):
     :param ex_time: 存在时间，默认一个小时
     :return:
     """
-    res = redis_conn.get(progress_code)
-    redis_conn.set(progress_code, progress)
+    # res = redis_conn.get(progress_code)
+    # redis_conn.set(progress_code, progress)
+    # if not res:
+    #     redis_conn.expire(progress_code, ex_time)
+    _set_redis_with_expire(redis_conn, progress_code, progress, ex_time)
+
+
+def set_stop_progress(redis_conn, progress_code, ex_time=3600):
+    """
+
+    :param redis_conn: redis connection
+    :param progress_code_stop: progress_code + '.stop'
+    :param ex_time: 存在时间，默认一个小时
+    :return:
+    """
+    progress_code_stop = progress_code + '.stop'
+
+    _set_redis_with_expire(redis_conn, progress_code_stop, 1, ex_time)
+
+
+def is_stopped(r, progress_code):
+    """
+    是否应该停止
+    :param r: redis connection
+    :param progress_code:
+    :return:
+    """
+    name = progress_code + '.stop'
+    stop = r.get(name)
+    if stop > 0:
+        return True
+    return False
+
+
+def _set_redis_with_expire(redis_conn, name, value, ex_time):
+    """
+    设置存在时间为 ex_time的一个 redis值
+    :param redis_conn: redis connection
+    :param name:
+    :param value:
+    :param ex_time:
+    :return:
+    """
+    res = redis_conn.get(name)
+    redis_conn.set(name, value)
     if not res:
-        redis_conn.expire(progress_code, ex_time)
+        redis_conn.expire(name, ex_time)
 
 
 def progress(packet_indexs, all):

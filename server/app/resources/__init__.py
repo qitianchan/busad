@@ -7,7 +7,8 @@ from .bus_resources import BusList, BusAPI
 from .login import Login
 from .publish_ad import Publish
 from .progress import Progress
-from .abort_test import AbortTest
+from .user_info import UserInfo
+from .abort import AbortPublish
 # flask_restful
 api = Api(prefix='/api')
 
@@ -30,4 +31,6 @@ api.add_resource(Login, '/login')
 api.add_resource(Publish, '/publish')
 api.add_resource(Progress, '/progress/<string:progress_code>')
 
-api.add_resource(AbortTest, '/abort')
+api.add_resource(UserInfo, '/userinfo/<string:nothing_to_do>')
+
+api.add_resource(AbortPublish, '/abort/<string:progress_code>')

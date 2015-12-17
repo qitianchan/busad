@@ -21,6 +21,7 @@ class User(db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
     company_name = db.Column(db.String(128))
     token = db.Column(db.String(128))
+    progress_code = db.Column(db.String(128))                                  # redis记录进度标识码
 
     def __init__(self, username, password):
         self.username = username
@@ -38,6 +39,20 @@ class User(db.Model):
     def generate_auth_token(self, expiration=24*60*60):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
+
+    @classmethod
+    def get_current_user_progress_code(cls):
+        if hasattr(g, 'user'):
+            return g.user.progress_code
+        return None
+
+    @classmethod
+    def set_current_user_progress_code(cls, progress_code):
+        if hasattr(g, 'user'):
+            current_user = User.get(g.user.id)
+
+            current_user.progress_code = progress_code
+            current_user.save()
 
     def save(self, role=1):
         self.role = role

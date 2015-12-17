@@ -1,7 +1,33 @@
 // TODO:使用观察者模式解决筛选的问题
-UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'PublishAD', 'FileUploader', 'toaster',
-    function($scope, $interval, District, Route, Bus, PublishAD, FileUploader, toaster) {
+UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','Bus', 'UserInfo','AbortPublish', 'PublishAD', 'FileUploader', 'toaster',
+    function($scope, $interval, District, Route, Bus,UserInfo, AbortPublish, PublishAD, FileUploader, toaster) {
+        //window.addEventListener("beforeunload", function (e) {
+        //    var confirmationMessage = 'It looks like you have been editing something. '
+        //                        + 'If you leave before saving, your changes will be lost.';
+        //
+        //    (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+        //    return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+        //});
 
+        window.onbeforeunload = function (e) {
+            window.console.log('befeorunload')
+        };
+
+        //
+        //$scope.$on('$locationChangeStart', function( event ) {
+        //    var answer = confirm("Are you sure you want to leave this page?")
+        //    if (!answer) {
+        //        event.preventDefault();
+        //    }
+        //});
+        //window.onunload = onunloadHandler;
+        //function onunloadHandler(){
+        //    var hello = 'hello';
+        //    alert(hello)
+        //}
+        //$scope.$on("$destroy", function(){
+        //    alert('hello')
+        //});
 
         var uploader = $scope.uploader = new FileUploader({
             url: 'http://localhost:5000/api/publish',
@@ -39,6 +65,9 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
                 bus.selected = false;
             });
             $scope.filterBuses = $scope.buses;
+        });
+        UserInfo.one('ss').customGET().then(function(ret){
+           $scope.userInfo = ret;
         });
 
         //Watch district change, when changed, all routes or buses which selected will be reset unselected
@@ -95,7 +124,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
                }
             });
 
-            item.formData = [{'euis': euis}];
+            item.formData = [{'euis': euis, 'user_id': $scope.userInfo.id}];
             $scope.uploader.uploadItem(item);
             $scope.uploader.onCompleteItem = function(item, respone, status, headers){
                 $scope.progress_code = respone.progress_code;
@@ -106,22 +135,27 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         };
         // 获取进度
         var getProgess = function(){
-            PublishAD.progress($scope.progress_code).then(function(ret){
+            PublishAD.progress($scope.progress_code).then(function(ret) {
+                if ($scope.uploading) {
+
                     $scope.progress = ret['progress'];
-                    if($scope.progress == 0){
+                    if ($scope.progress == 0) {
                         $scope.progress = 1;
                     }
 
                     var error = ret['error'];
-                    if($scope.progress == 100){
+                    if ($scope.progress == 100) {
                         $interval.cancel($scope.timer);
                         $scope.uploading = false;
                         toaster.pop('success', '发送成功', '');
-                    } else if($scope.progress == 408){
-                         $interval.cancel($scope.timer);
+                    } else if ($scope.progress == 408) {
+                        $interval.cancel($scope.timer);
                         $scope.uploading = false;
                         toaster.pop('error', '发送超时', error);
                     }
+                }else {
+                    $interval.cancel($scope.timer)
+                }
                 }
             );
         };
@@ -133,14 +167,10 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
             $scope.progress += 10;
         };
 
-        $scope.abortTest = function(){
-            AbortService.getList().then(function(ret){
-                toaster.pop('info', '', '开始')
-            })
-        };
+        $scope.abortPublish = function(){
 
-        $scope.abortEnd = function(){
-            AbortService.put().then(function(ret){
+            AbortPublish.one($scope.progress_code).customGET().then(function(ret){
+                $scope.uploading = false;
                 toaster.pop('info', '', '终止')
             })
         }

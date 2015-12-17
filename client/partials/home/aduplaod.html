@@ -75,8 +75,7 @@
                   <span class="sr-only">45% Complete</span>
                 </div>
               </div>
-              <div class="btn btn-primary" ng-click="abortTest()">开始</div>
-              <div class="btn btn-primary" ng-click="abortEnd()">终止</div>
+              <div class="btn btn-primary" ng-show="uploading" ng-click="abortPublish()">中止</div>
               <div class="" style="float:right;">
                 <input type="submit" value="提交" ng-click="publishAD()" class="btn btn-primary" ng-disabled="uploading">
                 <!--<input type="submit" value="提交" ng-click="publishAD()" ng-disabled="submitDisable" class="btn btn-primary">-->

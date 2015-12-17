@@ -22,14 +22,6 @@ from server.app.config import LORIOT_URL
 # 创建app，并且配置扩展
 def create_app():
 
-    # 单例模式的监听函数
-    # try:
-    #     # listen = Listening()
-    #     ws_listening_thread = Thread(target=wrap_listen)
-    #     ws_listening_thread.start()
-    # except Exception, e:
-    #     print e.message
-
     app = Flask(__name__)
     app.config.from_object('server.app.config')
     db = SQLAlchemy(app)
