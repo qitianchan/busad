@@ -28,3 +28,5 @@ flask-socketio
 Flask-Bcrypt==0.6.0
 redis==2.10.5
 flask-script==1.0
+gevent==1.0.2
+gunicorn=1.9.4

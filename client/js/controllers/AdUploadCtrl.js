@@ -169,9 +169,15 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
 
         $scope.abortPublish = function(){
 
-            AbortPublish.one($scope.progress_code).customGET().then(function(ret){
+            if($scope.progress_code){
+                AbortPublish.one($scope.progress_code).customGET().then(function(ret){
                 $scope.uploading = false;
                 toaster.pop('info', '', '终止')
             })
+            }else {
+                $scope.uploading = false;
+                toaster.pop('info', '', '终止')
+            }
+
         }
 }]);

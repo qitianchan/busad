@@ -14,7 +14,6 @@ class AbortPublish(Resource):
         set_stop(redis_conn, progress_code)
         return '', 201
 
-
 def set_stop(r, progress_code):
     progress_code_stop = progress_code + '.stop'
 

@@ -19,7 +19,7 @@ from server.app.utils.tools import timeout
 import copy
 
 temp_euis = []
-PACKET_SIZE = 35
+PACKET_SIZE = 48
 TIME_OUT = 3600
 # r = strict_redis
 redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
@@ -223,9 +223,12 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
     :param last_progress_code: 最后一次的进度信息标志码
     :return:
     """
+    print '进入发送阶段...'
     pubsub = redis_conn.pubsub()
     pubsub.subscribe(euis)
+    print '连接websocket。。。'
     ws = _connect_socket(ws_url)
+    print '连接成功'
     done_count = 0
     packet_indexs = dict()
 
@@ -240,6 +243,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
         try:
 
             filter_euis(euis, ws, pubsub)
+            time.sleep(2)
         except Exception, e:
             publish_progress(redis_conn, progress_code, 408)
             error = progress_code + '.error'
