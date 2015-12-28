@@ -2,6 +2,7 @@
 from threading import Thread
 class TimeLimitExpired(Exception): pass
 import time
+from server.test import hello
 
 def timelimit(timeout, func, args=(), kwargs={}):
     """ Run func with the given timeout. If func didn't finish running

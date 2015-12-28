@@ -63,18 +63,18 @@ def init_app(app):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
         return response
 
-    @app.before_first_request
-    def before_first_request():
-        try:
-            # listen = Listening()
-            ws = websocket.WebSocket()
-            ws.connect(LORIOT_URL)
-
-            ws_listening_thread = Thread(target=ws_listening)
-            ws_listening_thread.start()
-        except Exception, e:
-            print e.message
-            raise e
+    # @app.before_first_request
+    # def before_first_request():
+    #     try:
+    #         # listen = Listening()
+    #         ws = websocket.WebSocket()
+    #         ws.connect(LORIOT_URL)
+    #
+    #         ws_listening_thread = Thread(target=ws_listening)
+    #         ws_listening_thread.start()
+    #     except Exception, e:
+    #         print e.message
+    #         raise e
 
 if __name__ == '__main__':
     app = create_app()

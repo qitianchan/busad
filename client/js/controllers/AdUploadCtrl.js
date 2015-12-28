@@ -168,7 +168,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         };
 
         $scope.abortPublish = function(){
-
+            $scope.progress_code = 'sddsafs';
             if($scope.progress_code){
                 AbortPublish.one($scope.progress_code).customGET().then(function(ret){
                 $scope.uploading = false;

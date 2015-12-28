@@ -16,11 +16,15 @@ from redis import StrictRedis
 from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL
 from threading import Thread
 from server.app.utils.tools import timeout
+from gevent import Timeout
+from gevent.event import Event
 import copy
+import gevent
 
 temp_euis = []
 PACKET_SIZE = 48
 TIME_OUT = 3600
+MAX_CHUNKS_LEN = 127
 # r = strict_redis
 redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
 if not redis_conn.ping():
@@ -31,45 +35,74 @@ if not redis_conn.ping():
 #   progress_code
 #   progress_code.error
 #   progress_code.stop
-
+_evt = Event()
 
 class Publish(Resource):
 
     # TODO:文件接收
     def post(self):
-        f = request.files['file']
+        # f = request.files['file']
+        #
+        # euis = request.form.get('euis')
+        # user_id = request.form.get('user_id')
+        # if euis:
+        #
+        #     euis = euis.split(',')
+        #     chunks = slipe_file(f, PACKET_SIZE)
+        #     # 获取最后一次的progress_code, 并且终止掉（设置stop值为1）
+        #     progress_code = uuid4().hex
+        #     current_user = User.get(user_id)
+        #     if not current_user:
+        #         return '参数错误', 422
+        #
+        #     last_progress_code = current_user.progress_code
+        #     if last_progress_code:
+        #         set_stop_progress(redis_conn, last_progress_code)
+        #     # 更换progress_code
+        #     current_user.progress_code = progress_code
+        #     current_user.save()
+        #     new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
+        #
+        #     print '开始新的线程...'
+        #     try:
+        #         new_thread.start()
+        #     except Exception, e:
+        #         print '*' * 120
+        #         print e.message
+        #
+        #     return jsonify({'progress_code': progress_code})
+        #
+        # else:
+        #     return '', 303
 
-        euis = request.form.get('euis')
-        user_id = request.form.get('user_id')
-        if euis:
+        global _evt
+        _evt.set()
 
-            euis = euis.split(',')
-            chunks = slipe_file(f, PACKET_SIZE)
-            # 获取最后一次的progress_code, 并且终止掉（设置stop值为1）
-            progress_code = uuid4().hex
-            current_user = User.get(user_id)
-            if not current_user:
-                return '参数错误', 422
+        t = gevent.spawn(print_time)
+        t.start()
+        t.join()
+        try:
+            _evt.wait()
+            return '', 202
+        finally:
+            pass
+            # print 'end'
+            # # _evt.clear()
+            # return 'hello', 201
 
-            last_progress_code = current_user.progress_code
-            if last_progress_code:
-                set_stop_progress(redis_conn, last_progress_code)
-            # 更换progress_code
-            current_user.progress_code = progress_code
-            current_user.save()
-            new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
+def wait_for_stop():
+    global _evt
+    _evt.wait()
 
-            print '开始新的线程...'
-            try:
-                new_thread.start()
-            except Exception, e:
-                print '*' * 120
-                print e.message
-
-            return jsonify({'progress_code': progress_code})
-        else:
-            return '', 303
-
+def print_time():
+    global _evt
+    _evt.clear()
+    # try:
+    while not _evt.is_set():
+        print time.time()
+        gevent.sleep(1)
+    # finally:
+    #     _evt.clear()
 
 def _connect_socket(ws_url):
     """
