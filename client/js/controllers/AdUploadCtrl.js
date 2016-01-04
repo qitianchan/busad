@@ -126,16 +126,18 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
 
             item.formData = [{'euis': euis, 'user_id': $scope.userInfo.id}];
             $scope.uploader.uploadItem(item);
+            // When upload completed, begin
+            $scope.timer = $interval(getProgess, 4000, 1000);
             $scope.uploader.onCompleteItem = function(item, respone, status, headers){
-                $scope.progress_code = respone.progress_code;
-                if($scope.progress_code){
-                     $scope.timer = $interval(getProgess, 4000, 1000);
-                }
+                //$scope.progress_code = respone.progress_code;
+                //if($scope.progress_code){
+                //     $scope.timer = $interval(getProgess, 4000, 1000);
+                //}
             };
         };
         // 获取进度
         var getProgess = function(){
-            PublishAD.progress($scope.progress_code).then(function(ret) {
+            PublishAD.progress().then(function(ret) {
                 if ($scope.uploading) {
 
                     $scope.progress = ret['progress'];
@@ -160,24 +162,24 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
             );
         };
 
-        $scope.testProgress = function(){
-            if($scope.progress >= 100){
-                $scope.progress = 0;
-            }
-            $scope.progress += 10;
-        };
-
         $scope.abortPublish = function(){
 
-            if($scope.progress_code){
-                AbortPublish.one($scope.progress_code).customGET().then(function(ret){
+            AbortPublish.stop().then(function(res){
                 $scope.uploading = false;
-                toaster.pop('info', '', '终止')
-            })
-            }else {
-                $scope.uploading = false;
-                toaster.pop('info', '', '终止')
-            }
+                //$interval.cancel($scope.timer);
+                toaster.pop('info','', '中止',3600)
+            });
+
+
+            //if($scope.progress_code){
+            //    AbortPublish.one($scope.progress_code).customGET().then(function(ret){
+            //    $scope.uploading = false;
+            //    toaster.pop('info', '', '终止')
+            //})
+            //}else {
+            //    $scope.uploading = false;
+            //    toaster.pop('info', '', '终止')
+            //}
 
         }
 }]);

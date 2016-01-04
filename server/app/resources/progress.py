@@ -4,12 +4,14 @@ from flask_restful import Resource, fields, marshal, reqparse, marshal_with
 from server.app.extensions import auth
 from redis import Redis
 from server.app.config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB, REDIS_URL
+from flask import g
 
 
 class Progress(Resource):
-    def get(self, progress_code):
+    decorators = [auth.login_required]
+    def get(self):
         r = Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
-
+        progress_code = g.user.progress_code
         if not progress_code:
             response = jsonify({'error': 'progress_code is none'})
             response.status_code = 422

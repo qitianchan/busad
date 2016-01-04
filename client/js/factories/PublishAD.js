@@ -9,10 +9,10 @@ UserApp.factory('PublishAD', function(Restangular) {
                 .one('publish')
                 .customPOST(data);
         },
-        progress: function(data){
+        progress: function(){
             return Restangular
                 .one('progress')
-                .customGET(data);
+                .customGET();
         }
 
     };

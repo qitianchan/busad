@@ -1,4 +1,4 @@
-# from gevent.monkey import patch_all; patch_all()
+from gevent.monkey import patch_all; patch_all()
 from server.app.main import create_app
 from gevent.pywsgi import WSGIServer
 app = create_app()

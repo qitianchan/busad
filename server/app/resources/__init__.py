@@ -29,8 +29,8 @@ api.add_resource(BusAPI, '/buses/<int:id>')
 api.add_resource(Login, '/login')
 
 api.add_resource(Publish, '/publish')
-api.add_resource(Progress, '/progress/<string:progress_code>')
+api.add_resource(Progress, '/progress')
 
 api.add_resource(UserInfo, '/userinfo/<string:nothing_to_do>')
 
-api.add_resource(AbortPublish, '/abort/<string:progress_code>')
+api.add_resource(AbortPublish, '/abort')

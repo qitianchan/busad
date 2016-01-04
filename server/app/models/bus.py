@@ -38,6 +38,12 @@ class Bus(db.Model):
     def get_buses_by_route(cls, route_id):
         return cls.query.filter(Bus.route_id == route_id).all()
 
+    @classmethod
+    def get_buses_by_euis(cls, euis):
+        if not isinstance(euis, list):
+            raise ValueError('%s should be a list instance' % euis)
+        return cls.query.filter(Bus.eui.in_(euis)).all()
+
     def update_bus(self,route_id=None, plate_number=None, light_number=None, eui=None):
         if route_id:
             self.route_id = route_id

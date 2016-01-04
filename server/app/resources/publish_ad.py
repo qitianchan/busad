@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
+# from gevent.monkey import patch_all; patch_all()
+from redis.client import PubSub
 from server.app.extensions import auth, bcrypt
-from flask_restful import Resource
+from flask_restful import Resource, marshal
 from flask import request, jsonify
 from server.app.models.user import User
 from flask_restful import fields
@@ -17,10 +19,18 @@ from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, 
 from threading import Thread
 from server.app.utils.tools import timeout
 import copy
+from gevent import Timeout
+import gevent
+from server.app.models.bus import Bus
+
 
 temp_euis = []
 PACKET_SIZE = 48
 TIME_OUT = 3600
+RETRY_TIMES = 3
+TIME_OUT_PER_MESSAGE = 30
+
+
 # r = strict_redis
 redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD)
 if not redis_conn.ping():
@@ -32,6 +42,13 @@ if not redis_conn.ping():
 #   progress_code.error
 #   progress_code.stop
 
+bus_fields = {
+    'id': fields.Integer,
+    'route_id': fields.Integer,
+    'plate_number': fields.String,
+    'light_number': fields.String,
+    'eui': fields.String
+}
 
 class Publish(Resource):
 
@@ -44,6 +61,7 @@ class Publish(Resource):
         if euis:
 
             euis = euis.split(',')
+            buses = get_buses_by_euis(euis)
             chunks = slipe_file(f, PACKET_SIZE)
             # 获取最后一次的progress_code, 并且终止掉（设置stop值为1）
             progress_code = uuid4().hex
@@ -57,16 +75,21 @@ class Publish(Resource):
             # 更换progress_code
             current_user.progress_code = progress_code
             current_user.save()
-            new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
-
-            print '开始新的线程...'
+            # new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
+            # print '开始新的线程...'
             try:
-                new_thread.start()
+                # new_thread.start()
+                complete_euis = send_file_with_timelimit(chunks, euis, progress_code, last_progress_code)
+                complete_buses = filter(lambda bus: bus.eui in complete_euis, buses)
+                fail_buses = filter(lambda bus: bus.eui not in complete_euis, buses)
+                return marshal(fail_buses, bus_fields), 201
+
             except Exception, e:
                 print '*' * 120
                 print e.message
-
-            return jsonify({'progress_code': progress_code})
+                return '', 303
+                # return jsonify({'error': 'Time out'})
+            # return jsonify({'progress_code': progress_code})
         else:
             return '', 303
 
@@ -221,7 +244,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
     :param euis: 发送的eui列表
     :param progress_code: 当前进度信息标志码
     :param last_progress_code: 最后一次的进度信息标志码
-    :return:
+    :return: 发送成功的euis
     """
     print '进入发送阶段...'
     pubsub = redis_conn.pubsub()
@@ -231,6 +254,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
     print '连接成功'
     done_count = 0
     packet_indexs = dict()
+    complete_euis = []              #完成发送了的euis
 
     # euis存在或者没有被停止
     if euis and not is_stopped(redis_conn, progress_code):
@@ -240,6 +264,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = -1
 
+        # 检测设备是否在发送范围内
         try:
 
             filter_euis(euis, ws, pubsub)
@@ -270,51 +295,62 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
 
         print '正在接收消息 。。。'
 
-        for item in pubsub.listen():
-            if is_stopped(redis_conn, progress_code):
-                print '中止'
-                break
+        # 添加监听超时，超时时间为TIME_OUT_PER_MESSAGE
+        pubsub = TimeLimitPubsub(TIME_OUT_PER_MESSAGE, pubsub)
+        try:
+            for item in pubsub.listen():
+                if is_stopped(redis_conn, progress_code):
+                    print '中止'
+                    break
 
-            if not isinstance(item['data'], basestring):
-                continue
-            recv_data = item['data']
-            recv_data = json.loads(recv_data)
+                if not isinstance(item['data'], basestring):
+                    continue
+                recv_data = item['data']
+                recv_data = json.loads(recv_data)
 
-            if recv_data.get('h'):
-                continue
-            eui = recv_data.get('EUI')
-            if eui in euis and recv_data.get('data', None):
-                data = recv_data['data']
+                if recv_data.get('h'):
+                    continue
+                eui = recv_data.get('EUI')
+                if eui in euis and recv_data.get('data', None):
+                    data = recv_data['data']
 
-                if data[:2] == 'a1' or data[:2] == 'A1':
-                    index = get_index(data)
+                    if data[:2] == 'a1' or data[:2] == 'A1':
+                        index = get_index(data)
 
-                    # 判断是否已经发送完最后一个包,是的话，不做处理
-                    # index = packet_indexs[eui]
-                    if index >= len(chunks):
-                        done_count += 1
-                        if done_count >= len(euis):         # 如果全部已完成，停止
-                            print '发送完成'
-                            pubsub.close()
-                            break
-                        continue
-                    # 发送数据，index为数据指定的index, 并重置各个eui的 packet index
-                    # send_data = wrap_data(chunks[index], eui, index, end=(index+1 == len(chunks)))
-                    send_data = wrap_data(chunks[index], eui, index, end=False)
+                        # 判断是否已经发送完最后一个包,是的话，不做处理
+                        # index = packet_indexs[eui]
+                        if index >= len(chunks):
+                            done_count += 1
+                            #
+                            complete_euis.append(eui)
+                            if done_count >= len(euis):         # 如果全部已完成，停止
+                                print '发送完成'
+                                pubsub.close()
+                                return complete_euis
+                            continue
+                        # 发送数据，index为数据指定的index, 并重置各个eui的 packet index
+                        # send_data = wrap_data(chunks[index], eui, index, end=(index+1 == len(chunks)))
+                        send_data = wrap_data(chunks[index], eui, index, end=False)
 
-                    print 'index:', index + 1
-                    # print u'先睡2秒'
-                    # time.sleep(4)
-                    # 记录进度
-                    packet_indexs[eui] = index + 1
-                    current_progress = progress(packet_indexs, all_packet_be_send)
-                    print '=' * 60
-                    print '当前进度：', current_progress
-                    print 'progress_code', progress_code
-                    print '=' * 60
-                    publish_progress(redis_conn, progress_code, current_progress)
-                    ws.send(send_data)
-                    print u'发送数据：' , send_data
+                        print 'index:', index + 1
+                        packet_indexs[eui] = index + 1
+                        current_progress = progress(packet_indexs, all_packet_be_send)
+                        print '=' * 60
+                        print '当前进度：', current_progress
+                        print 'progress_code', progress_code
+                        print '=' * 60
+                        publish_progress(redis_conn, progress_code, current_progress)
+                        ws.send(send_data)
+                        print u'发送数据：' , send_data
+        except Timeout as e:
+            return complete_euis
+
+
+def get_buses_by_euis(euis):
+    buses = Bus.get_buses_by_euis(euis)
+    for bus in buses:
+        print bus.plate_number
+    return buses
 
 
 def init_euis(euis, ws):
@@ -441,15 +477,51 @@ def progress(packet_indexs, all):
     return int((sum / all) * 100)
 
 
+class TimeLimitPubsub(object):
+
+    def __init__(self, seconds, pubsub):
+        if not isinstance(seconds, int):
+            raise ValueError(u'%s should be an integer type' %seconds)
+        if not isinstance(pubsub, PubSub):
+            raise ValueError(u'%s should be a redis.client.PubSub instance' %pubsub)
+        self.pubsub = pubsub
+        self._timeout = seconds
+
+    def listen(self):
+        generator = self.pubsub.listen()
+        timer = Timeout(self._timeout)
+        timer.start()
+        for item in generator:
+            timer.cancel()
+            del timer
+            timer = Timeout(self._timeout)
+            timer.start()
+            yield item
+
+
+def wrap_pubsub(seconds, pubsub):
+    generator = pubsub.listen()
+    timer = Timeout(seconds)
+    timer.start()
+    for item in generator:
+        timer.cancel()
+        del timer
+        timer = Timeout(seconds)
+        timer.start()
+        yield item
+
+
 if __name__ == '__main__':
-    euis = ['BE7A000000000302']
+    from redis import Redis
+    r = Redis()
+    pubsub = r.pubsub()
+    pubsub.subscribe('hello')
+    pubsub = TimeLimitPubsub(5, pubsub)
+    to = wrap_pubsub(5,  pubsub)
 
-    euis = ['1', '2', '3', [1,2,3]]
-
-    copy_euis = copy.copy(euis)
-    euis = []
-
-    del copy_euis[2]
-    print copy_euis
-    deep_euis = copy.deepcopy(euis)
-    print deep_euis
+    try:
+        for t in pubsub.listen():
+            print t
+    except Timeout as e:
+        print('Time out')
+    print 'out of test'
