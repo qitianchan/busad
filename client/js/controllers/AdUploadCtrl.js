@@ -127,16 +127,30 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
             item.formData = [{'euis': euis, 'user_id': $scope.userInfo.id}];
             $scope.uploader.uploadItem(item);
             // When upload completed, begin
-            $scope.timer = $interval(getProgess, 4000, 1000);
-            $scope.uploader.onCompleteItem = function(item, respone, status, headers){
-                //$scope.progress_code = respone.progress_code;
+            $scope.timer = $interval(getProgress, 4000, 1000);
+            $scope.uploader.onCompleteItem = function(item, response, status, headers){
+                //$scope.progress_code = response.progress_code;
                 //if($scope.progress_code){
-                //     $scope.timer = $interval(getProgess, 4000, 1000);
+                //     $scope.timer = $interval(getProgress, 4000, 1000);
                 //}
+                if (status == 201 || status == 200){
+                    if(response.fail_buses){
+                        $scope.publishFailed = true;
+                        $scope.failedBuses = response.fail_buses;
+                        $interval.cancel($scope.timer);
+                        $scope.uploading = false;
+                    }
+                    $scope.publishSuccessed = true;
+                }else {
+                    $interval.cancel($scope.timer);
+                    $scope.uploading = false;
+                    toaster.pop('error', '发送超时', '', 3600*24*1000);
+                }
+
             };
         };
         // 获取进度
-        var getProgess = function(){
+        var getProgress = function(){
             PublishAD.progress().then(function(ret) {
                 if ($scope.uploading) {
 
@@ -149,11 +163,11 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
                     if ($scope.progress == 100) {
                         $interval.cancel($scope.timer);
                         $scope.uploading = false;
-                        toaster.pop('success', '发送成功', '');
+                        toaster.pop('success', '发送成功', '', 3600*24*1000);
                     } else if ($scope.progress == 408) {
                         $interval.cancel($scope.timer);
                         $scope.uploading = false;
-                        toaster.pop('error', '发送超时', error);
+                        toaster.pop('error', '发送超时', error, 3600*24*1000);
                     }
                 }else {
                     $interval.cancel($scope.timer)
@@ -167,7 +181,7 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
             AbortPublish.stop().then(function(res){
                 $scope.uploading = false;
                 //$interval.cancel($scope.timer);
-                toaster.pop('info','', '中止',3600)
+                toaster.pop('info','', '中止')
             });
 
 

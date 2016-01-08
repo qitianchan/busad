@@ -28,8 +28,9 @@ manager.add_command("shell", Shell(make_context=make_shell_context))
 
 @manager.option('-u', '--username', dest='username')
 @manager.option('-p', '--password', dest='password')
+# @manager.option('-c', '--confirm_password', dest='password')
 @manager.option('-e', '--email', dest='email')
-def create_admin(username=None, password=None, email=None):
+def create_admin(username=None, password=None,email=None):
     """Creates the admin user."""
 
     if not (username and password and email):
@@ -51,5 +52,6 @@ def deploy():
 
   """Run deployment tasks."""
   pass
+
 if __name__ == '__main__':
   manager.run()

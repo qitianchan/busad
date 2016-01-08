@@ -25,7 +25,7 @@ from server.app.models.bus import Bus
 
 
 temp_euis = []
-PACKET_SIZE = 48
+PACKET_SIZE = 30
 TIME_OUT = 3600
 RETRY_TIMES = 3
 TIME_OUT_PER_MESSAGE = 30
@@ -75,23 +75,33 @@ class Publish(Resource):
             # 更换progress_code
             current_user.progress_code = progress_code
             current_user.save()
-            # new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
-            # print '开始新的线程...'
             try:
-                # new_thread.start()
                 complete_euis = send_file_with_timelimit(chunks, euis, progress_code, last_progress_code)
-                complete_buses = filter(lambda bus: bus.eui in complete_euis, buses)
-                fail_buses = filter(lambda bus: bus.eui not in complete_euis, buses)
-                return marshal(fail_buses, bus_fields), 201
+                if complete_euis:
+                    complete_buses = filter(lambda bus: bus.eui in complete_euis, buses)
+                    fail_buses = filter(lambda bus: bus.eui not in complete_euis, buses)
+                else:
+                    fail_buses = buses
+
+                if fail_buses:
+                    print('fail_buses')
+
+                    plate_numbers = []
+                    for fb in fail_buses:
+                        plate_numbers.append(fb.plate_number)
+                    error = unicode(', '.join(plate_numbers)) + 'Failed!'
+                    res = {'error': error, 'fail_buses': ''}
+                    return jsonify(res)
+                else:
+                    return jsonify({'error': '', 'success': True, 'msg': 'successed!'})
 
             except Exception, e:
                 print '*' * 120
-                print e.message
-                return '', 303
+                raise
                 # return jsonify({'error': 'Time out'})
             # return jsonify({'progress_code': progress_code})
         else:
-            return '', 303
+            return '', 422
 
 
 def _connect_socket(ws_url):
@@ -108,19 +118,22 @@ def _connect_socket(ws_url):
         _connect_socket(ws_url)
 
 
-def wrap_data(data, eui, index, end=False, port='1'):
+def wrap_data(data, eui, index, port='1'):
     # 包装将要发送的数据
     # index需要加1，以确保板子收到的是正确的序号
     index += 1
     send_data = {"cmd": "tx", "EUI": "", "port": '1', "data": ""}
     send_data['EUI'] = eui
     send_data['port'] = port
-    data_head = index | 0x00
-    if end:
-        data_head = index | 0x80
+    # data_head = index | 0x00
+    # if end:
+    #     data_head = index | 0x80
+    #
+    data_type = '{0:02x}'.format(2)     # 数据类型： 0x01 控制类型     0x02 发送数据
+    index = '{0:02x}'.format(index)
 
-    data_head = '{0:02x}'.format(data_head)
-    send_data['data'] = data_head + data.encode('hex')
+    data_head = data_type + index
+    send_data['data'] = data_head + data.encode('hex')              # 类型 + 序号 +　发送的类型
     return json.dumps(send_data)
 
 
@@ -145,9 +158,9 @@ def send_file_with_timelimit(chunks, euis, progress_code, last_progress_code):
 
     try:
         if LORIOT_PROTOCOL == 'class_c':
-            send_file_with_class_c(chunks, euis, progress_code, last_progress_code)
+            return send_file_with_class_c(chunks, euis, progress_code, last_progress_code)
         else:
-            send_file(chunks, euis, progress_code, last_progress_code)
+            return send_file(chunks, euis, progress_code, last_progress_code)
     except Exception, e:
         publish_progress(redis_conn, progress_code, 408)
 
@@ -197,7 +210,7 @@ def send_file(chunks, euis, progress_code, last_progress_code):
             if eui in euis and recv_data.get('data', None):
                 data = recv_data['data']
 
-                if data[:2] == 'a1' or data[:2] == 'A1':
+                if data[:2] == '02':
                     index = get_index(data)
 
                     # 初始化, 复位
@@ -264,30 +277,31 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = -1
 
-        # 检测设备是否在发送范围内
-        try:
+        # # 检测设备是否在发送范围内
+        # try:
+        #
+        #     # filter_euis(euis, ws, pubsub)
+        #     time.sleep(2)
+        # except Exception, e:
+        #     publish_progress(redis_conn, progress_code, 408)
+        #     error = progress_code + '.error'
+        #     error_message = 'EUI: '
+        #     for e in euis:
+        #         if e not in temp_euis:
+        #             error_message += (e + ', ')
+        #     error_message += 'out off power or not exits'
+        #     publish_progress(redis_conn, error, error_message)
+        #
+        #     print '过滤超时'
+        #     raise
+        #
+        # # euis = temp_euis
 
-            filter_euis(euis, ws, pubsub)
-            time.sleep(2)
-        except Exception, e:
-            publish_progress(redis_conn, progress_code, 408)
-            error = progress_code + '.error'
-            error_message = 'EUI: '
-            for e in euis:
-                if e not in temp_euis:
-                    error_message += (e + ', ')
-            error_message += 'out off power or not exits'
-            publish_progress(redis_conn, error, error_message)
-
-            print '过滤超时'
-            raise
-
-        euis = temp_euis
         # send first package
         index = 0
         for eui in euis:
             # time.sleep(4)
-            send_data = wrap_data(chunks[index], eui, index, end=(index+1 == (len(chunks))))
+            send_data = wrap_data(chunks[index], eui, index)
             print '开始......'
             print '发送数据：', send_data
             ws.send(send_data)
@@ -295,9 +309,10 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
 
         print '正在接收消息 。。。'
 
-        # 添加监听超时，超时时间为TIME_OUT_PER_MESSAGE
-        pubsub = TimeLimitPubsub(TIME_OUT_PER_MESSAGE, pubsub)
         try:
+            # 添加监听超时，超时时间为TIME_OUT_PER_MESSAGE
+            pubsub = TimeLimitPubsub(TIME_OUT_PER_MESSAGE, pubsub)
+
             for item in pubsub.listen():
                 if is_stopped(redis_conn, progress_code):
                     print '中止'
@@ -314,7 +329,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
                 if eui in euis and recv_data.get('data', None):
                     data = recv_data['data']
 
-                    if data[:2] == 'a1' or data[:2] == 'A1':
+                    if data[:2] == '02':
                         index = get_index(data)
 
                         # 判断是否已经发送完最后一个包,是的话，不做处理
@@ -322,20 +337,22 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
                         if index >= len(chunks):
                             done_count += 1
                             #
+                            print 'Eui: %s' % eui
                             complete_euis.append(eui)
+                            print 'Complet_euis: %s' % complete_euis[0]
+                            print '@' * 120
                             if done_count >= len(euis):         # 如果全部已完成，停止
                                 print '发送完成'
-                                pubsub.close()
                                 return complete_euis
                             continue
                         # 发送数据，index为数据指定的index, 并重置各个eui的 packet index
-                        # send_data = wrap_data(chunks[index], eui, index, end=(index+1 == len(chunks)))
-                        send_data = wrap_data(chunks[index], eui, index, end=False)
+                        send_data = wrap_data(chunks[index], eui, index)
 
                         print 'index:', index + 1
                         packet_indexs[eui] = index + 1
                         current_progress = progress(packet_indexs, all_packet_be_send)
                         print '=' * 60
+                        print recv_data
                         print '当前进度：', current_progress
                         print 'progress_code', progress_code
                         print '=' * 60
@@ -365,38 +382,38 @@ def init_euis(euis, ws):
         ws.send(send_data)
 
 
-@timeout(30)
-def filter_euis(euis, ws, pubsub):
-    """
-    筛选不存在的eui
-    :param euis: 要发送的eui列表
-    :return: 有效的eui列表
-    """
-    global temp_euis
-
-    init_euis(euis, ws)
-    while True:
-        for item in pubsub.listen():
-            if not isinstance(item['data'], basestring):
-                    continue
-            recv_data = item['data']
-            recv_data = json.loads(recv_data)
-
-            if recv_data.get('h'):
-                continue
-            eui = recv_data.get('EUI')
-            if eui in euis and recv_data.get('data', None):
-                data = recv_data['data']
-
-                if data[:2] == 'a1' or data[:2] == 'A1':
-                    index = get_index(data)
-                    if index == 0:
-                        if eui not in temp_euis:
-                            temp_euis.append(eui)
-                        if len(euis) == len(temp_euis):
-                            print '过滤完成'
-                            break
-        break
+# @timeout(30)
+# def filter_euis(euis, ws, pubsub):
+#     """
+#     筛选不存在的eui
+#     :param euis: 要发送的eui列表
+#     :return: 有效的eui列表
+#     """
+#     global temp_euis
+#
+#     init_euis(euis, ws)
+#     while True:
+#         for item in pubsub.listen():
+#             if not isinstance(item['data'], basestring):
+#                     continue
+#             recv_data = item['data']
+#             recv_data = json.loads(recv_data)
+#
+#             if recv_data.get('h'):
+#                 continue
+#             eui = recv_data.get('EUI')
+#             if eui in euis and recv_data.get('data', None):
+#                 data = recv_data['data']
+#
+#                 if data[:2] == 'a1' or data[:2] == 'A1':
+#                     index = get_index(data)
+#                     if index == 0:
+#                         if eui not in temp_euis:
+#                             temp_euis.append(eui)
+#                         if len(euis) == len(temp_euis):
+#                             print '过滤完成'
+#                             break
+#         break
 
 
 def get_index(data):
@@ -404,7 +421,7 @@ def get_index(data):
     :param data:收到的信息
     :return: 信息中的序号
     """
-    return int(data[2:4], 16)
+    return int(data[4:6], 16)
 
 
 def publish_progress(redis_conn, progress_code, progress, ex_time=3600):

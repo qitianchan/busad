@@ -4,8 +4,9 @@
     <div class="page-inner">
       <h2>发布广告</h2>
       <hr>
-      <div class="row">
-        <form action="" class="form-horizontal">
+      <!--<div class="row">-->
+      <div>
+        <div action="" class="form-horizontal">
           <div class="form-group">
             <div class="district">
             <label for="district-selector" class="col-sm-2 control-label">区域</label>
@@ -19,6 +20,9 @@
               </select>
               </div>
             </div> <!-- district -->
+          </div> <!-- form-group -->
+
+            <div class="form-group">
               <label  class="col-sm-2 control-label">线路</label>
               <div class="col-sm-10 checkbox-region">
                 <div class="route-checkbox-region-inner">
@@ -37,10 +41,12 @@
                   </ul>
                 </div>
               </div>
+            </div>
+
             <!--</div>&lt;!&ndash; route end &ndash;&gt;-->
             <!--</div> &lt;!&ndash; bus end &ndash;&gt;-->
 
-            <div class="bus-select">
+            <div class="bus-select form-group">
               <label  class="col-sm-2 control-label">公交车</label>
               <div class="col-sm-10 checkbox-region">
                 <div class="bus-select-region-inner">
@@ -57,13 +63,17 @@
                 </div>
               </div>
             </div> <!-- bus end -->
+            <div class="alert alert-success alert-dismissable" ng-show="publishSuccessed">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              全部发送成功</div>
+            <div class="alert alert-danger alert-dismissable"ng-show="publishFailed">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <strong>失败：</strong> <span class="bus" ng-repeat="bus in failedBuses">{{bus.plate_number}}</span>
+            </div>
 
             <div class="upload-file">
               <div class="form-group">
                 <label for="adFile" class="col-sm-2 control-label">广告文件</label>
-                <!--<a href="javascript:;" class="btn btn-primary">上传TXT文件-->
-                <!--<input id="adFile" type="file" class="upload-file" value="上传文件">-->
-                <!--</a>-->
                 <div>
                   <input id="adFile" type="file" class="btn btn-primary"  nv-file-select="" uploader="uploader" value="上传TXT文件">
                 </div>
@@ -75,12 +85,11 @@
                   <span class="sr-only">45% Complete</span>
                 </div>
               </div>
-              <div class="btn btn-primary" ng-show="uploading" ng-click="abortPublish()">中止</div>
+               <div class="btn btn-primary" ng-show="uploading" ng-click="abortPublish()">中止</div>
               <div class="" style="float:right;">
                 <input type="submit" value="提交" ng-click="publishAD()" class="btn btn-primary" ng-disabled="uploading">
                 <!--<input type="submit" value="提交" ng-click="publishAD()" ng-disabled="submitDisable" class="btn btn-primary">-->
               </div>
-            </div>
 
         </form>
       </div>

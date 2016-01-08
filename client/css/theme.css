@@ -269,7 +269,7 @@ h6, .h6 {
 }
 
 .bus-select {
-    min-height: 200px;
+    /*min-height: 200px;*/
 }
 .checkbox-region {
     background-color: white;
@@ -302,7 +302,7 @@ h6, .h6 {
     /*padding: 0px;*/
     /*cursor: pointer;*/
     /*opacity: 0;*/
-    margin-top: 400px;
+    /*margin-top: 400px;*/
     padding-top: 20px;
 }
 .page .row {
