@@ -13,10 +13,42 @@ import json
 import threading
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 from redis import StrictRedis
-from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL
+from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL, OURSELF_APP_EUI, OURSELF_TOKEN , OURSELF_HOST, OURSELF_PORT
 from threading import Thread
 from server.app.utils.tools import timeout
 import copy
+from socketIO_client import SocketIO, BaseNamespace
+from logging import getLogger
+
+logger = getLogger()
+logger.setLevel('debug')
+
+HOST = OURSELF_HOST
+APP_EUI = OURSELF_APP_EUI
+TOKEN = OURSELF_TOKEN
+PORT = OURSELF_PORT
+db_conn = None
+
+thread = None
+
+
+def listen_thread():
+    global thread
+    try:
+        if not thread:
+            print('hello listen thread')
+            thread = Thread(target=listen_data)
+            thread.start()
+    except Exception as e:
+        print('Something wrong in listen_thread: %s' % e)
+        listen_thread()
+
+
+def listen_data():
+    socketio_cli = SocketIO(host=HOST, port=PORT, params={'app_eui': APP_EUI, 'token': TOKEN})
+    test_namespace = socketio_cli.define(TestNamespace, '/test')
+    socketio_cli.wait()
+
 
 temp_euis = []
 PACKET_SIZE = 48
@@ -31,6 +63,37 @@ if not redis_conn.ping():
 #   progress_code
 #   progress_code.error
 #   progress_code.stop
+
+
+class TestNamespace(BaseNamespace):
+
+        def on_connect(self):
+            print('socket io connected')
+
+        def on_disconnect(self):
+            print('socket io disconnected')
+
+        def on_error_msg(self):
+            print('error occured')
+            print(self)
+
+        def on_post_rx(self, msg):
+            print('get post msg')
+            try:
+                # todo: deal with message
+                pass
+            except Exception as e:
+                print('something wrong')
+                pass
+
+        def on_enqueued(self):
+            print('enqueued')
+            print(self)
+
+        def on_connect_error(self, msg):
+            print('connect error')
+            print(msg)
+
 
 
 class Publish(Resource):
@@ -59,7 +122,6 @@ class Publish(Resource):
             current_user.save()
             new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
 
-            print '开始新的线程...'
             try:
                 new_thread.start()
             except Exception, e:
@@ -164,7 +226,6 @@ def send_file(chunks, euis, progress_code, last_progress_code):
             recv_data = json.loads(recv_data)
 
             if done_count >= len(euis):         # 如果全部已完成，停止
-                print '发送完成'
                 pubsub.close()
                 break
 
@@ -174,7 +235,7 @@ def send_file(chunks, euis, progress_code, last_progress_code):
             if eui in euis and recv_data.get('data', None):
                 data = recv_data['data']
 
-                if data[:2] == 'a1' or data[:2] == 'A1':
+                if data[:2].lower() == 'a1':
                     index = get_index(data)
 
                     # 初始化, 复位
@@ -263,12 +324,12 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
         for eui in euis:
             # time.sleep(4)
             send_data = wrap_data(chunks[index], eui, index, end=(index+1 == (len(chunks))))
-            print '开始......'
-            print '发送数据：', send_data
+            print 'beginning...'
+            print 'send data：', send_data
             ws.send(send_data)
             packet_indexs[eui] = index
 
-        print '正在接收消息 。。。'
+        print('receive message...')
 
         for item in pubsub.listen():
             if is_stopped(redis_conn, progress_code):

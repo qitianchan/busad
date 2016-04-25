@@ -21,7 +21,7 @@ class User(db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
     company_name = db.Column(db.String(128))
     token = db.Column(db.String(128))
-    progress_code = db.Column(db.String(128))                                  # redis记录进度标识码
+    # progress_code = db.Column(db.String(128))                                  # redis记录进度标识码
 
     def __init__(self, username, password):
         self.username = username
