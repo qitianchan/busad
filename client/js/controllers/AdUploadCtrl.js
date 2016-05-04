@@ -116,8 +116,8 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
 
         $scope.publishAD = function(){
             $scope.uploading = true;
-            item = $scope.uploader.queue[0];
-            euis = [];
+            var item = $scope.uploader.queue[0];
+            var euis = [];
             angular.forEach($scope.filterBuses, function(bus){
                if(bus.selected){
                    euis.push(bus.eui)

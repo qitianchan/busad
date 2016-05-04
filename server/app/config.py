@@ -1,7 +1,7 @@
 import os
 basedir = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# max content length  10Kb
-MAX_CONTENT_LENGTH = 10 * 1024
+# max content length  100Kb
+MAX_CONTENT_LENGTH = 100 * 1024
 
 DEBUG = True
 WTF_CSRF_ENABLED = False
@@ -28,3 +28,9 @@ REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = 123456
 REDIS_URL = 'redis://:123456@183.230.40.230:6379'
+
+# Ourself Server websocket infomation
+OURSELF_APP_EUI = 'BB7A000000000002'
+OURSELF_TOKEN = 'zvWtBAxJFWpK4VY8q8dBGA=='
+OURSELF_HOST = '183.230.40.231'
+OURSELF_PORT = 8100

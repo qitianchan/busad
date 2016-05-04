@@ -15,7 +15,8 @@ import json
 import threading
 from server.app.config import LORIOT_WEBSOCKET_URL as ws_url
 from redis import StrictRedis
-from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL
+from socketIO_client import SocketIO, BaseNamespace
+from server.app.config import REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LORIOT_PROTOCOL, OURSELF_APP_EUI, OURSELF_TOKEN , OURSELF_HOST, OURSELF_PORT
 from threading import Thread
 from server.app.utils.tools import timeout
 import copy
@@ -26,9 +27,17 @@ from server.app.models.bus import Bus
 
 temp_euis = []
 PACKET_SIZE = 30
-TIME_OUT = 3600
+TIME_OUT = 10
 RETRY_TIMES = 3
 TIME_OUT_PER_MESSAGE = 30
+
+HOST = OURSELF_HOST
+APP_EUI = OURSELF_APP_EUI
+TOKEN = OURSELF_TOKEN
+PORT = OURSELF_PORT
+
+socketIO = SocketIO(host=HOST, PORT=PORT, params={'app_eui': APP_EUI, 'token': TOKEN})
+socketIO.connect('/test')
 
 
 # r = strict_redis
@@ -104,18 +113,18 @@ class Publish(Resource):
             return '', 422
 
 
-def _connect_socket(ws_url):
-    """
-    创建 websocket 连接
-    :param ws_url:websocket URL
-    :return: 一个连接上了的ws
-    """
-    try:
-        ws = websocket.WebSocket()
-        ws.connect(url=ws_url)
-        return ws
-    except Exception:
-        _connect_socket(ws_url)
+# def _connect_socket(ws_url):
+#     """
+#     创建 websocket 连接
+#     :param ws_url:websocket URL
+#     :return: 一个连接上了的ws
+#     """
+#     try:
+#         ws = websocket.WebSocket()
+#         ws.connect(url=ws_url)
+#         return ws
+#     except Exception:
+#         _connect_socket(ws_url)
 
 
 def wrap_data(data, eui, index, port='1'):
@@ -155,7 +164,8 @@ def slipe_file(file, step):
 
 
 def send_file_with_timelimit(chunks, euis, progress_code, last_progress_code):
-
+    if not socketIO.connected:
+        socketIO.connect('/test')
     try:
         if LORIOT_PROTOCOL == 'class_c':
             return send_file_with_class_c(chunks, euis, progress_code, last_progress_code)
@@ -179,7 +189,7 @@ def send_file(chunks, euis, progress_code, last_progress_code):
     """
     # redis_conn = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password= REDIS_PASSWORD)
 
-    ws = _connect_socket(ws_url)
+    # ws = _connect_socket(ws_url)
     done_count = 0
     packet_indexs = dict()
 
@@ -217,13 +227,15 @@ def send_file(chunks, euis, progress_code, last_progress_code):
                     if packet_indexs[eui] == -1:
                         packet_indexs[eui] = 0
                         reset_data = wrap_data('00', eui, index=0, end=True)
-                        ws.send(reset_data)
-                        continue
+                        socketIO.emit('tx', reset_data)
+                        # ws.send(reset_data)
+                        # continue
 
                     # 若已经复位，确认index已归零，如若未归零，继续等待
                     if packet_indexs[eui] == 0 and index != 0:
                         reset_data = wrap_data('00', eui, index=0, end=True)
-                        ws.send(reset_data)
+                        socketIO.emit('tx', reset_data)
+                        # ws.send(reset_data)
                         continue
 
                     # 判断是否已经发送完最后一个包,是的话，不做处理
@@ -236,7 +248,8 @@ def send_file(chunks, euis, progress_code, last_progress_code):
 
                     print u'发送数据：' , send_data
                     print 'index:', index + 1
-                    ws.send(send_data)
+                    socketIO.emit('tx', send_data)
+                    # ws.send(send_data)
                     packet_indexs[eui] = index + 1
                     # 记录进度
                     current_progress = progress(packet_indexs, all_packet_be_send)
@@ -262,9 +275,7 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
     print '进入发送阶段...'
     pubsub = redis_conn.pubsub()
     pubsub.subscribe(euis)
-    print '连接websocket。。。'
-    ws = _connect_socket(ws_url)
-    print '连接成功'
+
     done_count = 0
     packet_indexs = dict()
     complete_euis = []              #完成发送了的euis
@@ -277,26 +288,6 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
         for x in xrange(len(euis)):
             packet_indexs[euis[x]] = -1
 
-        # # 检测设备是否在发送范围内
-        # try:
-        #
-        #     # filter_euis(euis, ws, pubsub)
-        #     time.sleep(2)
-        # except Exception, e:
-        #     publish_progress(redis_conn, progress_code, 408)
-        #     error = progress_code + '.error'
-        #     error_message = 'EUI: '
-        #     for e in euis:
-        #         if e not in temp_euis:
-        #             error_message += (e + ', ')
-        #     error_message += 'out off power or not exits'
-        #     publish_progress(redis_conn, error, error_message)
-        #
-        #     print '过滤超时'
-        #     raise
-        #
-        # # euis = temp_euis
-
         # send first package
         index = 0
         for eui in euis:
@@ -304,7 +295,8 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
             send_data = wrap_data(chunks[index], eui, index)
             print '开始......'
             print '发送数据：', send_data
-            ws.send(send_data)
+            socketIO.emit('tx', send_data)
+            # ws.send(send_data)
             packet_indexs[eui] = index
 
         print '正在接收消息 。。。'
@@ -357,7 +349,8 @@ def send_file_with_class_c(chunks, euis, progress_code, last_progress_code):
                         print 'progress_code', progress_code
                         print '=' * 60
                         publish_progress(redis_conn, progress_code, current_progress)
-                        ws.send(send_data)
+                        socketIO.emit('tx', send_data)
+                        # ws.send(send_data)
                         print u'发送数据：' , send_data
         except Timeout as e:
             return complete_euis
@@ -368,52 +361,6 @@ def get_buses_by_euis(euis):
     for bus in buses:
         print bus.plate_number
     return buses
-
-
-def init_euis(euis, ws):
-    """
-    初始化euis
-    :param euis: eui列表
-    :param ws: websocket 连接
-    :return:
-    """
-    for eui in euis:
-        send_data = wrap_data('212342', eui, index=1, end=True)
-        ws.send(send_data)
-
-
-# @timeout(30)
-# def filter_euis(euis, ws, pubsub):
-#     """
-#     筛选不存在的eui
-#     :param euis: 要发送的eui列表
-#     :return: 有效的eui列表
-#     """
-#     global temp_euis
-#
-#     init_euis(euis, ws)
-#     while True:
-#         for item in pubsub.listen():
-#             if not isinstance(item['data'], basestring):
-#                     continue
-#             recv_data = item['data']
-#             recv_data = json.loads(recv_data)
-#
-#             if recv_data.get('h'):
-#                 continue
-#             eui = recv_data.get('EUI')
-#             if eui in euis and recv_data.get('data', None):
-#                 data = recv_data['data']
-#
-#                 if data[:2] == 'a1' or data[:2] == 'A1':
-#                     index = get_index(data)
-#                     if index == 0:
-#                         if eui not in temp_euis:
-#                             temp_euis.append(eui)
-#                         if len(euis) == len(temp_euis):
-#                             print '过滤完成'
-#                             break
-#         break
 
 
 def get_index(data):
