@@ -72,7 +72,7 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
     $routeProvider
         .when('/', {
             controller: 'AdUploadCtrl',
-            templateUrl: partialsDir + '/home/aduplaod.html'
+            templateUrl: partialsDir + '/home/adupload.html'
         })
         .when('/sessions/create', {
             controller: 'SessionCreateCtrl',
@@ -89,16 +89,16 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
             controller: 'UserCreateCtrl',
             templateUrl: partialsDir + '/user/create.html'
         })
-        .when('/posts/create', {
-            controller: 'PostCreateCtrl',
-            templateUrl: partialsDir + '/post/create.html',
+        .when('/route/routes', {
+            controller: 'RouteCtrl',
+            templateUrl: partialsDir + '/route/routes.html',
             resolve: {
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }
         })
-        .when('/route/routes', {
-            controller: 'RouteCtrl',
-            templateUrl: partialsDir + '/route/routes.html',
+        .when('/group', {
+            controller: 'GroupCtrl',
+            templateUrl: partialsDir + '/group/group.html',
             resolve: {
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }

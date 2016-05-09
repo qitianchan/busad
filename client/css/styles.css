@@ -8,6 +8,8 @@ body {
     /*background-color: #F0F3F4;*/
 }
 
+html, body { height: 100%; }
+
 select > option:active {
     background-color: #9588B2;
 }
@@ -142,4 +144,19 @@ select > option:active {
     color: #c7c7c7;
     text-align: center;
     margin-top: 15px;
+}
+.drop-zone {
+    line-height: 120px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.my-drop-zone { border: dashed 3px lightgray; }
+.nv-file-over { border: dashed 3px #7266BA; } /* Default class applied to drop zones on over */
+
+.abort {
+
+}
+.upload {
+    float: right;
 }

@@ -18,7 +18,7 @@
                 <nav class="blog-nav">
                     <a class="blog-nav-item" href="#/" ng-class="{active: isActive('/')}">发布广告</a>
                     <a class="blog-nav-item" href="#/route/routes" ng-class="{active: isActive('/route/routes')}">路线</a>
-                    <a class="blog-nav-item" href="#/route/multicast" ng-class="{active: isActive('/route/multicast')}">组播</a>
+                    <a class="blog-nav-item" href="#/group" ng-class="{active: isActive('/route/multicast')}">组播</a>
                     <!--<a class="blog-nav-item" href="#/sessions/create" ng-hide="isLoggedIn" ng-class="{active: isActive('/sessions/create')}">Login</a>-->
                     <a class="blog-nav-item ft-right" href="#/sessions/destroy" ng-show="isLoggedIn">退出</a>
                 </nav>
@@ -27,22 +27,8 @@
 
         <div ng-view></div>
         <toaster-container></toaster-container>
-        <!--<div class="blog-footer">-->
-            <!--<p>Blog built by <a href="https://twitter.com/johnkevinmbasco">@johnkevinmbasco</a> using Flask and AngularJS.</p>-->
-            <!--<p>-->
-                <!--<a href="#">Back to top</a>-->
-            <!--</p>-->
-        <!--</div>-->
 
         </div><!-- /.container -->
-
-        <!--<div class="blog-footer">-->
-            <!--<p>Blog built by <a href="https://twitter.com/johnkevinmbasco">@johnkevinmbasco</a> using Flask and AngularJS.</p>-->
-            <!--<p>-->
-                <!--<a href="#">Back to top</a>-->
-            <!--</p>-->
-        <!--</div>-->
-
         <script type="text/javascript" src="./bower_components/angularjs/angular.js"></script>
         <script type="text/javascript" src="./bower_components/angular-route/angular-route.js"></script>
         <script type="text/javascript" src="./bower_components/lodash/dist/lodash.js"></script>
@@ -62,6 +48,7 @@
         <script type="text/javascript" src="./js/controllers/SessionDestroyCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/UserCreateCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/RouteCtrl.js"></script>
+        <script type="text/javascript" src="./js/controllers/GroupCtrl.js"></script>
         <script type="text/javascript" src="./js/factories/Session.js"></script>
         <script type="text/javascript" src="./js/factories/User.js"></script>
         <script type="text/javascript" src="./js/factories/UserInfo.js"></script>
