@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../python-moduler/bottle/.idea/bottle.iml" filepath="$PROJECT_DIR$/../python-moduler/bottle/.idea/bottle.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/busad.iml" filepath="$PROJECT_DIR$/.idea/busad.iml" />
     </modules>
   </component>

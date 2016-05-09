@@ -21,7 +21,7 @@ from socketIO_client import SocketIO, BaseNamespace
 from logging import getLogger
 
 logger = getLogger()
-logger.setLevel('debug')
+logger.setLevel('DEBUG')
 
 HOST = OURSELF_HOST
 APP_EUI = OURSELF_APP_EUI
