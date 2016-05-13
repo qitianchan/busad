@@ -160,3 +160,96 @@ select > option:active {
 .upload {
     float: right;
 }
+
+.modal-dialog {
+    width: 960px;
+}
+
+.modal-body {
+    /*max-height: 600px;*/
+}
+
+.selete-reg {
+    background-color: #f4f4f4;
+    float: left;
+}
+.select-reg::before .select-reg::after {
+    display: table;
+    content: " ";
+
+}
+
+
+.selected {
+    background-color: #F4F4F4;
+    min-height: 4em;
+    padding: 10px 16px;
+    line-height: 30px;
+    float: left;
+}
+
+.division {
+    border-top: 3px solid #7266BA;
+    margin-top: 1em;
+}
+.choices {
+    min-height: 100px;
+    max-height: 700px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.route-mod {
+    border-top: 1px solid #CCCCCC;
+}
+
+.route-mod .route-name {
+    font-weight: 700;
+    padding: 20px 16px;
+    display: inline-block;
+
+}
+.route-element {
+    float: left;
+    margin: 4px;
+    width: 128px;
+    line-height: 20px;
+    white-space: nowrap;
+    /*transition: 0.2s ease-in-out;*/
+}
+.route-element {
+    padding: 4px 10px;
+    /*margin: 0 5px;*/
+    white-space:nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.route-element {
+ padding-left: 24px;
+}
+.route-element:hover {
+    background-color: #8E94A2;
+    cursor: pointer;
+    /*color: #7266BA;*/
+    /*text-decoration: underline;*/
+}
+
+.added {
+    font-weight: bold;
+    color: #7266BA;
+
+}
+.added > p {
+    border: 1px solid #CCC;
+}
+
+.selected::after, .choices::after .select-reg::after{
+    clear: both;
+    content: " ";
+    display: block;
+}
+
+.select-ele {
+    float: left;
+    margin: 8px;
+    border: 1px dashed #5e5e5e;
+}

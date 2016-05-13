@@ -9,6 +9,7 @@ class Bus(db.Model):
     __tablename__ = 'bus'
     id = db.Column(db.Integer, primary_key=True)
     route_id = db.Column(db.Integer, db.ForeignKey('route.id'))
+    group_id = db.Column(db.Integer, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     plate_number = db.Column(db.String(16), unique=True)                # 车牌号
     light_number = db.Column(db.String(16))                             # 车灯号

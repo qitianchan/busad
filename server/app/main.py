@@ -24,9 +24,10 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object('server.app.config')
-    db = SQLAlchemy(app)
     init_app(app)
     config_extensions(app)
+    with app.app_context():
+        db.create_all()
 
     return app
 

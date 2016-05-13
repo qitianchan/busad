@@ -9,6 +9,7 @@ from .publish_ad import Publish
 from .progress import Progress
 from .user_info import UserInfo
 from .abort import AbortPublish
+from .group_resources import GroupList, GroupAPI
 # flask_restful
 api = Api(prefix='/api')
 
@@ -34,3 +35,6 @@ api.add_resource(Progress, '/progress/<string:progress_code>')
 api.add_resource(UserInfo, '/userinfo/<string:nothing_to_do>')
 
 api.add_resource(AbortPublish, '/abort/<string:progress_code>')
+
+api.add_resource(GroupList, '/group')
+api.add_resource(GroupAPI, '/group/<int:id>')

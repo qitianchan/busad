@@ -4,3 +4,4 @@ from .company import Company
 from .bus import Bus
 from .district import District
 from .route import Route
+from .group import Group

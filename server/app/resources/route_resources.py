@@ -4,10 +4,9 @@ from flask_restful import fields, marshal, reqparse, marshal_with
 from flask_restful import Resource
 import flask_restful as restful
 from server.app.extensions import db, bcrypt, auth
-from server.app.models import Route
+from server.app.models import Route, Bus
 from  sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-
 route_fields = {
     'id': fields.Integer,
     'district_id': fields.Integer,
