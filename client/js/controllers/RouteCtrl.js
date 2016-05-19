@@ -1,10 +1,10 @@
 +function(){
   UserApp.controller('RouteCtrl', ['$scope', '$filter', 'District', 'Route','Bus', 'Group','toaster',
     function($scope, $filter, District, Route, Bus, Group, toaster) {
-        $scope.busSelected = true;
+        $scope.groupSelected = true;
+        $scope.busSelected = false;
         $scope.routeSelected = false;
         $scope.districtSelected = false;
-        $scope.groupSelected = false;
         $scope.busesInGroup = [
             {id: 234, name:'组1'},
             {id: 235, name:'组2'}

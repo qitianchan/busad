@@ -1,0 +1,30 @@
+<div class="busad-background">
+    <div class="container">
+        <div class="page">
+            <div class="page-inner">
+                <ol class="breadcrumb">
+                    <li><a href="#/route/routes">路线</a></li>
+                    <li class="active">编辑组成员</li>
+                </ol>
+                <div class="">
+                    <div class="row current-list">
+                        <div ng-repeat="bus in inGroup">
+                            <p><span>{{bus.bus_name}}</span><i class="glyphicon glyphicon-remove" ng-click="removeNode($index)"></i></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="route-area">
+                    <div class=" row route-list" ng-repeat="route in buses">
+                        <div class="route">
+                            <h4>{{ route.route_name }}</h4>
+                        </div>
+                        <div class="buses">
+                            <div class="element" ng-repeat="bus in route.buses" ng-class="{'selected': bus.in_group}" ng-click="addBus(bus)">{{ bus.bus_name }}</div>
+                        </div>
+                    </div>
+                </div>  <!-- /route-area -->
+                <div class="commit"><button class="btn btn-primary" type="button" ng-click="updateMember()">提交</button></div>
+            </div>   <!-- /page-inner -->
+        </div>    <!-- /page -->
+    </div>    <!-- container -->
+</div>  <!-- /background -->

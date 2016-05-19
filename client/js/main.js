@@ -96,6 +96,10 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }
         })
+        .when('/route/editgroup/:groupId', {
+            controller: 'EditGroupCtrl',
+            templateUrl: partialsDir + '/route/edit_group.html'
+        })
         .when('/group', {
             controller: 'GroupCtrl',
             templateUrl: partialsDir + '/group/group.html',

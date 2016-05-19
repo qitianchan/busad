@@ -180,13 +180,13 @@ select > option:active {
 }
 
 
-.selected {
-    background-color: #F4F4F4;
-    min-height: 4em;
-    padding: 10px 16px;
-    line-height: 30px;
-    float: left;
-}
+/*.selected {*/
+    /*background-color: #F4F4F4;*/
+    /*min-height: 4em;*/
+    /*padding: 10px 16px;*/
+    /*line-height: 30px;*/
+    /*float: left;*/
+/*}*/
 
 .division {
     border-top: 3px solid #7266BA;
@@ -252,4 +252,89 @@ select > option:active {
     float: left;
     margin: 8px;
     border: 1px dashed #5e5e5e;
+}
+
+.current-list {
+	padding: 17px 10px 9px 3px;
+    background: #eef2f3;
+}
+
+.current-list p {
+	float: left;
+	width: 120px;
+	padding: 0 6px;
+	border: 1px dashed #CCC;
+	margin: 0 0 8px 11px;
+	/*cursor: move;*/
+	overflow: hidden;
+	height: 30px;
+	line-height: 30px;
+	/*font-size: 0;*/
+	-webkit-text-size-adjust: none;
+}
+.current-list i{
+    float: right;
+    line-height: 30px;
+    margin: 0 auto;
+    cursor: pointer;
+    height: 100%;
+    color: #C9C9C9;
+}
+
+.current-list i:hover {
+    color: #5e5e5e;
+}
+
+
+.route-list {
+    border-top: 1px solid #CCCCCC;
+    min-height: 100px;
+    position: relative;
+}
+
+.route-list .route {
+    float: left;
+	width: 150px;
+	height: 100%;
+	text-align: right;
+	border-top: 1px solid #5b6475;
+	padding-top: 24px;
+}
+
+.buses {
+    float: left;
+    margin-left: 1.2em;
+}
+.element {
+     padding: 4px 10px;
+    /*margin: 0 5px;*/
+    white-space:nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    float: left;
+    margin: 4px;
+    width: 128px;
+    line-height: 20px;
+}
+
+.element:hover {
+    background-color: #8E94A2;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.selected {
+    /*padding: 4px;*/
+    border: 1px solid #CCCCCC;
+    background-color: #EEF2F3;
+}
+
+.selected:hover {
+    background-color: #EEF2F3;
+    color: #58666E;
+    /*cursor: auto;*/
+}
+
+.commit {
+    float: right;
 }

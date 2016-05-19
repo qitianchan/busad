@@ -4,10 +4,10 @@
     <!--<div class="page-inner">-->
       <!-- route-head-->
       <div class="row route-head">
+        <div class="col-sm-3 route-item" ng-click="tabSelect(4)" ng-class="{'itemActive': groupSelected}">组</div>
         <div class="col-sm-3 route-item" ng-click="tabSelect(1)" ng-class="{'itemActive': busSelected}">公交</div>
         <div class="col-sm-3 route-item" ng-click="tabSelect(2)" ng-class="{'itemActive': routeSelected}">路线</div>
         <div class="col-sm-3 route-item" ng-click="tabSelect(3)" ng-class="{'itemActive': districtSelected}">区域</div>
-        <div class="col-sm-3 route-item" ng-click="tabSelect(4)" ng-class="{'itemActive': groupSelected}">组</div>
       </div>
       <!-- /route-head-->
       <div class="page-inner">
@@ -172,7 +172,8 @@
             <table class="table table-bordered table-hover table-condensed">
               <tr style="font-weight: bold">
                 <td style="width:50%">组名</td>
-                <td style="width:50%">操作</td>
+                <td style="width:25%">操作</td>
+                <td style="width:25%">编辑组成员</td>
               </tr>
               <!-- /table head -->
 
@@ -197,16 +198,13 @@
                   </form>
                   <div class="buttons" ng-show="!rowform.$visible">
                     <button class="btn btn-primary" ng-click="rowform.$show()">编辑</button>
-                    <button class="btn btn-primary" type="button" ng-click="showModal(group)">添加成员</button>
-                    <!--<button class="btn btn-primary" type="button" data-toggle="modal" data-target="#addBusModal">添加成员</button>-->
                     <button class="btn btn-danger" ng-click="removeGroup($index, group)">删除</button>
                   </div>
                 </td>
+                <td><a href="#/route/editgroup/{{group.id}}" class="btn btn-primary">添加成员</a></td>
               </tr>
               </table>
-
               <button class="btn btn-default" ng-click="addGroup()">添加</button>
-
             </table>
 
           </div>

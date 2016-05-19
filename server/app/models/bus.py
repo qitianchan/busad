@@ -49,3 +49,6 @@ class Bus(db.Model):
         if eui:
             self.eui = eui
 
+    @classmethod
+    def get_all(cls):
+        return cls.query.filter(cls.user_id == g.user.id).all()
