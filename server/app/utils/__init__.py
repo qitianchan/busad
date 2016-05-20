@@ -39,9 +39,6 @@ class MSocketIO(SocketIO):
             self.connect(path)
         return namespace
 
-socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
-
-event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
 
 
 if __name__ == '__main__':
