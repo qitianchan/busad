@@ -22,9 +22,9 @@ TOKEN = OURSELF_TOKEN
 LORA_PORT = OURSELF_PORT
 NAMESPACE = '/test'
 
-socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
-
-event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
+# socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+#
+# event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
 
 group_fields = {
     'id': fields.Integer,
