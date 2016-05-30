@@ -8,6 +8,7 @@
         <link rel="stylesheet" type="text/css" href="css/theme.css">
         <link rel="stylesheet" type="text/css" href="css/styles.css">
         <!--<link rel="stylesheet" href="bower_components/iCheck/skins/flat/purple.css">-->
+        <link href="//cdn.bootcss.com/angular-block-ui/0.2.2/angular-block-ui.min.css" rel="stylesheet">
         <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css">
         <link rel="stylesheet" href="bower_components/AngularJS-Toaster/toaster.css">
     </head>
@@ -18,7 +19,8 @@
                 <nav class="blog-nav">
                     <a class="blog-nav-item" href="#/" ng-class="{active: isActive('/')}">发布广告</a>
                     <a class="blog-nav-item" href="#/route/routes" ng-class="{active: isActive('/route/routes')}">路线</a>
-                    <a class="blog-nav-item" href="#/group" ng-class="{active: isActive('/route/multicast')}">组播</a>
+                    <a class="blog-nav-item" href="#/group" ng-class="{active: isActive('/group')}">组播</a>
+                    <a class="blog-nav-item" href="#/command" ng-class="{active: isActive('/command')}">命令</a>
                     <!--<a class="blog-nav-item" href="#/sessions/create" ng-hide="isLoggedIn" ng-class="{active: isActive('/sessions/create')}">Login</a>-->
                     <a class="blog-nav-item ft-right" href="#/sessions/destroy" ng-show="isLoggedIn">退出</a>
                 </nav>
@@ -51,6 +53,7 @@
         <script type="text/javascript" src="./js/controllers/RouteCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/GroupCtrl.js"></script>
         <script type="text/javascript" src="./js/controllers/EditGroupCtrl.js"></script>
+        <script type="text/javascript" src="./js/controllers/CommandCtrl.js"></script>
         <script type="text/javascript" src="./js/factories/Session.js"></script>
         <script type="text/javascript" src="./js/factories/User.js"></script>
         <script type="text/javascript" src="./js/factories/UserInfo.js"></script>
@@ -64,7 +67,7 @@
         <!--<script type="text/javascript" src="./js/services/RectangularTest.js"></script>-->
         <script type="text/javascript" src="./js/directives/match.js"></script>
         <script type="text/javascript" src="./js/directives/showTab.js"></script>
-
+        <script src="//cdn.bootcss.com/angular-block-ui/0.2.2/angular-block-ui.min.js"></script>
     </body>
 </html>
 

@@ -1,4 +1,4 @@
-window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl', 'angularFileUpload', 'xeditable', 'toaster'])
+window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStorageModule', 'SessionCreateCtrl', 'angularFileUpload', 'xeditable', 'toaster', 'blockUI'])
 
 .run(function($location, Restangular, AuthService, editableOptions) {
     Restangular.setFullRequestInterceptor(function(element, operation, route, url, headers, params, httpConfig) {
@@ -106,5 +106,9 @@ window.UserApp = angular.module('UserApp', ['ngRoute', 'restangular', 'LocalStor
             resolve: {
                 redirectIfNotAuthenticated: redirectIfNotAuthenticated('/sessions/create')
             }
+        })
+        .when('/command', {
+            controller: 'CommandCtrl',
+            templateUrl: partialsDir + '/command/command.html'
         });
 });

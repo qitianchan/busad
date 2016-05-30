@@ -218,7 +218,8 @@ h6, .h6 {
 
 .btn-primary:hover, .btn-primary:focus,
 .btn-primary.focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primaryr {
-    background-color: #6254B2
+    background-color: #6A0AD1;
+    border-color: #6A0AD1;
 }
 
 .btn-block {

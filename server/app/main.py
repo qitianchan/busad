@@ -13,7 +13,7 @@ import redis
 import websocket
 from utils.ws_listenning import wrap_listen, ws_listening, Listening
 from server.app.config import LORIOT_URL
-
+from server.app.resources.command import command
 # GATEWAY_ID = "be7a0029"
 # TOKEN = "7AXCO2-Kkle42YGVVKvmmQ"
 #
@@ -57,6 +57,7 @@ def config_extensions(app):
 # app = create_app()
 
 def init_app(app):
+    app.register_blueprint(command, url_prefix='/api/command')
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -64,18 +65,18 @@ def init_app(app):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
         return response
 
-    @app.before_first_request
-    def before_first_request():
-        try:
-            # listen = Listening()
-            ws = websocket.WebSocket()
-            ws.connect(LORIOT_URL)
-
-            ws_listening_thread = Thread(target=ws_listening)
-            ws_listening_thread.start()
-        except Exception, e:
-            print e.message
-            raise e
+    # @app.before_first_request
+    # def before_first_request():
+    #     try:
+    #         # listen = Listening()
+    #         ws = websocket.WebSocket()
+    #         ws.connect(LORIOT_URL)
+    #
+    #         ws_listening_thread = Thread(target=ws_listening)
+    #         ws_listening_thread.start()
+    #     except Exception, e:
+    #         print e.message
+    #         raise e
 
 if __name__ == '__main__':
     app = create_app()

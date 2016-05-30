@@ -1,0 +1,31 @@
+<div class="busad-background">
+    <div class="container">
+        <div class="basad-content page">
+            <div class="page-inner">
+                <div class="row">
+                    <div class="route-area">
+                    <div class=" row route-list" ng-repeat="route in buses">
+                        <div class="route">
+                            <h4>{{ route.route_name }}</h4>
+                        </div>
+                        <div class="buses">
+                            <div class="element" ng-repeat="bus in route.buses" ng-class="{'selected': bus.selected}" ng-click="selectBus(bus)">{{ bus.bus_name }}</div>
+                        </div>
+                    </div>
+                </div>  <!-- /route-area -->
+                </div>
+                <div class="row" block-ui="commandUI">
+                    <hr>
+                    <h3>控制设备</h3>
+                        <div class="control-group">
+                            <button class="btn btn-primary btn-md abort" ng-click="openPower()"><span class="glyphicon glyphicon-ban-circle"></span> 打开电源</button>
+                            <button class="btn btn-danger btn-md abort" ng-click="closePower()"><span class="glyphicon glyphicon-ban-circle"></span> 关闭电源</button>
+                            <button class="btn btn-info btn-md abort" ng-click="rssiTest()"><span class="glyphicon glyphicon-ban-circle"></span> RSSI测试</button>
+                            <button class="btn btn-success btn-md " ng-click="uploadMessage1()"><span class="glyphicon glyphicon-upload"></span> 下载测试信息1</button>
+                            <button class="btn btn-success btn-md " ng-click="uploadMessage2()"><span class="glyphicon glyphicon-upload"></span> 下载测试信息2</button>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

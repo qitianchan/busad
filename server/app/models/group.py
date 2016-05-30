@@ -12,17 +12,21 @@ class Group(db.Model):
     group_name = db.Column(db.String(128), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     eui = db.Column(db.String(32), unique=True)
+    group_id = db.Column(db.String(8), unique=True)
+
 
     @property
     def buses(self):
         return Bus.query.filter(Bus.group_id == self.id).all()
 
-    def __init__(self, group_name):
+    def __init__(self, group_name, group_id, group_eui=None):
         self.group_name = group_name
         self.user_id = g.user.id
+        self.group_id = group_id
+        self.eui = group_eui
 
     def __repr__(self):
-        return '<Group %s>' % self.route_name
+        return '<Group %s>' % self.group_name
 
     @classmethod
     def get_groups(cls):

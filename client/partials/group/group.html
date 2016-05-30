@@ -4,8 +4,19 @@
             <div class="page-inner">
                 <h2>组播</h2>
                 <hr>
-                <div class="row">
+                <div class="group-area">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h3>选择分组</h3>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="element" ng-repeat="group in groups" ng-class="{'selected': group.selected}" ng-click="selectGroup(group)">{{ group.group_name }}</div>
+                        </div>
+                    </div>
 
+                </div>
+                <hr>
+                <div class="row">
                 <div class="col-md-4">
 
                     <h3>上传文件区域</h3>
@@ -22,12 +33,10 @@
                     <!-- Example: nv-file-select="" uploader="{Object}" options="{Object}" filters="{String}" -->
                     <input type="file" nv-file-select="" uploader="uploader" /><br/>
                     <hr>
-                    <button class="btn btn-danger btn-md abort"><span class="glyphicon glyphicon-ban-circle"></span> 终止发布</button>
-                    <button class="btn btn-success btn-md upload "><span class="glyphicon glyphicon-upload"></span> 开始发布</button>
+
                 </div>
 
                 <div class="col-md-8" style="margin-bottom: 40px">
-                    <h2>目标文件</h2>
                     <table class="table">
                         <thead>
                             <tr>
@@ -71,7 +80,7 @@
                                 <div class="progress-bar" role="progressbar" ng-style="{ 'width': uploader.progress + '%' }"></div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-success btn-s" ng-click="uploader.uploadAll()" ng-disabled="!uploader.getNotUploadedItems().length">
+                        <button type="button" class="btn btn-success btn-s" ng-click="uploader.uploadAll()" ng-disabled="!uploader.getNotUploadedItems().length || !groupsSelected.length">
                             <span class="glyphicon glyphicon-upload"></span> 开始发布
                         </button>
                         <button type="button" class="btn btn-warning btn-s" ng-click="uploader.cancelAll()" ng-disabled="!uploader.isUploading">
@@ -81,10 +90,12 @@
                             <span class="glyphicon glyphicon-trash"></span> 移走文件
                         </button>
                     </div>
+                    <hr>
 
                 </div>
 
-            </div>
+            </div> <!-- /row -->
+
             </div> <!-- /page-inner -->
         </div>  <!-- /page -->
     </div>

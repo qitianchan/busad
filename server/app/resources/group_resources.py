@@ -15,7 +15,7 @@ except ImportError:
 
 from server.app.utils import MSocketIO, EventNameSpace
 from server.app.config import OURSELF_APP_EUI, OURSELF_TOKEN, OURSELF_HOST, OURSELF_PORT
-
+import random
 LORA_HOST = OURSELF_HOST
 APP_EUI = OURSELF_APP_EUI
 TOKEN = OURSELF_TOKEN
@@ -29,6 +29,8 @@ NAMESPACE = '/test'
 group_fields = {
     'id': fields.Integer,
     'group_name': fields.String,
+    'group_id': fields.String,
+    'eui': fields.String
 }
 
 group_parser = reqparse.RequestParser()
@@ -55,10 +57,33 @@ class GroupList(Resource):
     @marshal_with(group_fields)
     def post(self):
         group_name = request.json.get('group_name')
+        group_id = request.json.get('group_id')
+        group_eui = request.json.get('group_eui')
         if not group_name:
             abort(422)
 
-        group = Group(group_name)
+        def group_eui_productor():
+            import random
+            s = ''
+            for i in range(4):
+                s += chr(random.randint(0, 255))
+            return s.encode('hex').upper()
+
+        def on_add_group(data):
+            pass
+
+        # group_eui = group_eui_productor()
+
+        # socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+        #
+        # event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
+
+        # event_space.emit('add_group', {'name': group_name, 'group_addr': group_eui, 'nwkskey': '2B7E151628AED2A6ABF7158809CF4F3C',
+        #                                'appskey': '2B7E151628AED2A6ABF7158809CF4F3C'})
+        # socketio_cli.wait(3)
+
+        group = Group(group_name, group_id, group_eui)
+        # todo 添加到LoRaWan服务器，带回group_id
         db.session.add(group)
         db.session.commit()
         return group
@@ -75,6 +100,7 @@ class GroupAPI(Resource):
             b['route_id'] = bus.route_id
             b['bus_name'] = bus.plate_number
             b['bus_id'] = bus.id
+            b['bus_eui'] = bus.eui
             buses_in_group_res.append(b)
 
         routes = Route.get_routes()
@@ -88,20 +114,25 @@ class GroupAPI(Resource):
             for bus in buses_all:
                 if bus.route_id == route.id:
                     in_group = bus.group_id == id
-                    buses.append({'route_id': bus.route_id, 'bus_name': bus.plate_number, 'bus_id': bus.id, 'in_group': in_group})
+                    buses.append({'route_id': bus.route_id, 'bus_name': bus.plate_number, 'bus_id': bus.id, 'in_group': in_group,
+                                  'bus_eui': bus.eui})
             data['buses'] = buses
             res.append(data)
         return jsonify({'buses_all': res, 'in_group': buses_in_group_res})
 
     @auth.login_required
+    @marshal_with(group_fields)
     def put(self, id):
         group_name = request.json.get('group_name')
         group = Group.get(id)
         if not group:
             abort(404)
         group.group_name = group_name
+        # todo: 添加组到LoRa服务器
+        # group_eui = None
+
         group.save()
-        return group, 201
+        return group
 
     @auth.login_required
     def delete(self, id):
@@ -118,7 +149,6 @@ class GroupAPI(Resource):
             response.status_code = 404
             return response
 
-
 class GroupMember(Resource):
     decorators = [auth.login_required]
 
@@ -126,11 +156,32 @@ class GroupMember(Resource):
         return {'message': 'success'}, 201
 
     def put(self, group_id):
+
+        # socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+        #
+        # event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
+
         group = Group.get(group_id)
         members = loads(request.data)
         delete = []
         add = []
-        if group:
+        failed_rm_euis = []
+        failed_add_euis = []
+
+        def on_rm_dev_from_group(data):
+            if data['success'] == 0:
+                dev_eui = data['dev_eui']
+                failed_rm_euis.append(dev_eui)
+
+        def on_add_dev_into_group(data):
+            if data['success'] == 0:
+                dev_eui = data['dev_eui']
+                failed_add_euis.append(dev_eui)
+
+        event_space.on('rm_dev_from_group', on_rm_dev_from_group)
+        event_space.on('add_dev_into_group', on_add_dev_into_group)
+
+        if group.group_id:
             original_members = group.buses
             for bus in original_members:
                 if bus.id not in [mem['bus_id'] for mem in members]:
@@ -141,11 +192,46 @@ class GroupMember(Resource):
                     add.append(m['bus_id'])
 
             # delete members
+            delete_buses = []
             for d in delete:
-                pass
-            # add members
-            return {'message': 'success'}, 201
-        return {'message': '组不存在'}, 422
+                bus = Bus.get(d)
+                if bus:
+                    delete_buses.append(bus)
+             # add members
+            add_buses = []
+            for a in add:
+                bus = Bus.get(a)
+                if bus:
+                    add_buses.append(bus)
+
+            for bus in delete_buses:
+                event_space.emit('rm_dev_from_group', {'group_id': group.group_id, 'cmd': 'rm_dev_from_group',
+                                                        'dev_eui': bus.eui})
+            for bus in add_buses:
+                event_space.emit('add_dev_into_group', {'group_id': group.group_id, 'cmd': 'add_dev_into_group',
+                                                        'dev_eui': bus.eui})
+            # 等待socketio的操作结果
+            socketio_cli.wait(3)
+
+            # 写入数据库
+            for bus in delete_buses:
+                if bus.eui not in failed_rm_euis:
+                    bus.group_id = None
+                    db.session.add(bus)
+            for bus in add_buses:
+                if bus.eui.upper() not in failed_add_euis:
+                    bus.group_id = group.id
+                    db.session.add(bus)
+            db.session.commit()
+
+            error_message = ''
+            if failed_add_euis + failed_rm_euis:
+                error_message = ', '.join(failed_add_euis + failed_rm_euis) + ' 操作失败'
+            socketio_cli.disconnect()
+            return {'error_message': error_message}, 201
+
+        socketio_cli.disconnect()
+        return {'error_message': '组不存在'}, 422
 
 
 def filter_buses(buses, route_id):
@@ -156,3 +242,16 @@ def filter_buses(buses, route_id):
     return res
 
 
+def add_group_to_lora_wan_server(group_eui, group_name):
+    # todo: 添加组到loraWAN
+    pass
+
+if __name__ == '__main__':
+    APP_EUI = 'BB7A000000000032'
+    TOKEN = '-YAN0Up6nMvbTMre0rdoHg'
+    socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+    event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
+    event_space.emit('add_dev_into_group', {'group_id': '0000CBF1', 'cmd': 'add_dev_into_group',
+                                                        'dev_eui': 'BE00000000000013'})
+    print('done!')
+    # event_space.emit('')

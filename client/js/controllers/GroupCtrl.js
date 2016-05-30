@@ -1,8 +1,28 @@
 /**
  * Created by qitian on 2016/5/9 0009.
  */
-UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', function($scope, $location, FileUploader) {
-     var uploader = $scope.uploader = new FileUploader({
+UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', 'Group', function($scope, $location, FileUploader, Group) {
+    $scope.groupsSelected = [];
+    Group.getList().then(function(ret){
+       $scope.groups = ret;
+    });
+    $scope.selectGroup = function(item){
+        if(item.selected === false || item.selected === undefined){
+            item.selected = true;
+            $scope.groupsSelected.push(item);
+        }else {
+            item.selected = false;
+            for(var i=0; i<$scope.groupsSelected.length; i++){
+                if($scope.groupsSelected[i].id === item.id){
+                    var target = $scope.groupsSelected.splice(i, 1)[0];
+                    target.selected = false;
+                }
+            }
+        }
+    };
+
+
+    var uploader = $scope.uploader = new FileUploader({
             url: 'http://localhost:5000/api/publish'
             //url: 'http://183.230.40.230:9090/api/publish'
         });
@@ -19,13 +39,13 @@ UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', function(
             return item.size < 1024 * 30;
         }
     });
-    //uploader.filters.push({
-    //    name: 'fileTypeFilter',
-    //    fn: function(item, option){
-    //        var type = item.name.slice(item.name.lastIndexOf('.') + 1);
-    //        return '|TXT|'.indexOf(type) !== -1;
-    //    }
-    //});
+    uploader.filters.push({
+        name: 'fileTypeFilter',
+        fn: function(item, option){
+            var type = item.name.slice(item.name.lastIndexOf('.') + 1);
+            return '|TXT|'.indexOf(type) !== -1;
+        }
+    });
 
     // CALLBACKS
 

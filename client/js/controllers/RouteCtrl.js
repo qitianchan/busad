@@ -288,7 +288,7 @@
                 $scope.groups.splice(index, 1)
             }
             Group.one(group.id).customDELETE().then(function(ret){
-                $scope.districts.splice(index, 1);
+                $scope.groups.splice(index, 1);
                 toaster.pop('success', '', '删除成功');
             },function(ret){
                 toaster.pop('error', '', '删除失败,有其他数据引用此数据');
