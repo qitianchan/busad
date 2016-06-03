@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask import g
 from wtforms.validators import Email
-
+from sqlalchemy import and_
 from server.app.extensions import db, bcrypt
-
 
 class Bus(db.Model):
     __tablename__ = 'bus'
@@ -52,3 +51,8 @@ class Bus(db.Model):
     @classmethod
     def get_all(cls):
         return cls.query.filter(cls.user_id == g.user.id).all()
+
+    @classmethod
+    def get_euis_by_group_id(cls, groupid, user_id):
+        res = cls.query.with_entities(cls.eui).filter(and_(cls.user_id == user_id, cls.group_id == groupid)).all()
+        return map(lambda item: item[0], res)

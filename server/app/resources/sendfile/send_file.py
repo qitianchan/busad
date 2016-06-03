@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
+import logging
 import time
-from greenlet import greenlet
 from server.app.utils import MSocketIO, EventNameSpace
 from server.app.config import OURSELF_APP_EUI, OURSELF_TOKEN, OURSELF_HOST, OURSELF_PORT
-from gevent import Timeout
-from binascii import unhexlify, hexlify
-import json
 LORA_HOST = OURSELF_HOST
 APP_EUI = OURSELF_APP_EUI
 TOKEN = OURSELF_TOKEN
 LORA_PORT = OURSELF_PORT
 NAMESPACE = '/test'
+
+logging.getLogger('requests').setLevel(logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
 
 
 class TimeOutException(Exception):
@@ -30,14 +30,17 @@ class GroupSender(object):
         self._device_last_update_time = {}                  # 最后单播发送时间，用于判断这个设备是否还有用，每次单播发送时更新，整个单播过程完成时删除
         self.failed_devs = list()                           # 发送失败的设备
         # self.device_send_failed_flag = {}                 # 单播时设备标志，标志刚发送的包是否失败
-        # self.socketio_cli = MSocketIO(LORA_HOST=LORA_PORT, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
-        self.socketio_cli = MSocketIO()
+        self.socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+        # self.socketio_cli = MSocketIO()
         self.namespace = self.socketio_cli.define(EventNameSpace, path=NAMESPACE)
         self.package_length = package_length
         self.wait_time = wait_time
         self.content = []
+        self.send_failed = False
         self.namespace.on('post_rx', self.on_post_rx)
-        self.namespace.on('connect', self.send)
+
+
+        # self.namespace.on('connect', self.send)
         for i in range(int(len(content) / package_length) + 1):
             try:
                 start = i * package_length
@@ -47,40 +50,61 @@ class GroupSender(object):
                 self.content.append(content[i * package_length: ])
 
     def send(self):
-        if self.socketio_cli.connected:
-            print('Sending...')
-            self.socketio_cli.wait(10)
-            for i in range(len(self.content)):
-                frament = self._wrap_data(self.content[i], i+1)
-                print('Sedding group message %s' % frament)
-                self.namespace.emit('tx', frament)
+        try:
+            if self.socketio_cli.connected:
+                print('Sending...')
+                # self.socketio_cli.wait(10)
+                for i in range(len(self.content)):
+                    self.is_broadcast_continue = False
+                    try_times = 0
+                    frament = self._wrap_data(self.content[i], i+1)
 
-                # 等待一定的时间，如果每个设备都接收成功，则继续往下发，否则继续等待，知道未成功的设备处理完毕
-                print('waiting...')
-                self.socketio_cli.wait(self.wait_time)
-                # while self._uncompleted_devs:
-                while True:
-                    # 超时，删除设备
-                    for k, v in self._device_last_update_time:
-                        if time.time() - v > self.time_out:
-                            try:
-                                self._uncompleted_devs.remove(k)
-                            except KeyError:
-                                pass
-                    # 如果还有未超时的设备的未完成的设备，则继续等待
-                    if self._uncompleted_devs:
+                    # 如果没有收到响应，尝试重复发送3次,失败则返回
+                    while try_times < 3:
+                        if try_times > 0:
+                            print('重新发送组播消息')
+                        print('Sedding group message %s' % frament)
+                        self.namespace.emit('tx', frament)
+                        # 等待一定的时间，如果每个设备都接收成功，则继续往下发，否则继续等待，知道未成功的设备处理完毕
+                        print('waiting...')
                         self.socketio_cli.wait(self.wait_time)
-                    else:
-                        break
 
-            # 终止信号
-            end_frament = self._wrap_data('', len(self.content), mtx_flag=True)
-            self.namespace.emit('tx', end_frament)
-            print('Success!')
+                        try_times += 1
+                        if self.is_broadcast_continue:
+                            break
+                    if try_times >= 3 and not self.is_broadcast_continue:
+                        print('发送失败！！！！')
+                        return False
+
+                    # while self._uncompleted_devs:
+                    while True:
+                        # 超时，删除设备
+                        for k in self._device_last_update_time:
+                            if time.time() - self._device_last_update_time[k] > self.time_out:
+                                try:
+                                    self._uncompleted_devs.remove(k)
+                                except KeyError:
+                                    pass
+                        # 如果还有未超时的设备的未完成的设备，则继续等待
+                        if self._uncompleted_devs:
+                            self.socketio_cli.wait(self.wait_time)
+                        else:
+                            break
+
+                # 终止信号
+                end_frament = self._wrap_data('', len(self.content), mtx_flag=True)
+                self.namespace.emit('tx', end_frament)
+                print('end_frament', end_frament)
+                print('Success!')
+                self.socketio_cli.disconnect()
+                return True
+
+            else:
+                # todo: 重新尝试发送，超时抛出异常
+                return False
+        finally:
             self.socketio_cli.disconnect()
-        else:
-            # todo: 重新尝试发送，超时抛出异常
-            pass
+
 
     def single_send(self, eui, index, end=False):
         """
@@ -99,13 +123,23 @@ class GroupSender(object):
             # 终止信号
             end_frament = self._wrap_single_data(eui, '', 1, tx_flag=True)
             self.namespace.emit('tx', end_frament)
-            self._uncompleted_devs.remove(eui)
-            self._device_last_update_time.pop(eui)
+            try:
+                self._uncompleted_devs.remove(eui)
+            except KeyError:
+                pass
+
+            if eui in self._device_last_update_time:
+                self._device_last_update_time.pop(eui)
 
     def on_post_rx(self, data):
+
         if data['EUI'].upper() in map(lambda d: d.upper(), self.dev_euis):
             payload = data['data']
+            print('on_post_rx', data)
             if payload[:2] == 'A1':
+                if payload[2:4] == '01':
+                    self.is_broadcast_continue = True
+
                 start_index = int(payload[4:6], 16)
                 end_index = int(payload[6:8], 16)
 
@@ -114,11 +148,12 @@ class GroupSender(object):
                     # self._count += 1
                     self._uncompleted_devs.add(data['EUI'])
                     # if payload[2:4]:
-                    self.single_send(data['EUI'], start_index)
+                    self.single_send(data['EUI'], start_index + 1)
                 else:
                     # 发送成功
                     # self._count -= 1
-                    self.single_send(data['EUI'], 1, end=True)
+                    if payload[2:4] == '00':
+                        self.single_send(data['EUI'], 1, end=True)
 
     def _format_data(self, data, index, mtx_flag=False, tx_flag=False):
         """
@@ -130,7 +165,7 @@ class GroupSender(object):
         :param data:
         :return:
         """
-        length_fmt = mtx_flag << 7 | tx_flag << 6 | index
+        length_fmt = tx_flag << 7 | mtx_flag << 6 | len(data)
         res = (chr(0xA0) + chr(index) + chr(length_fmt) + data).encode('hex')
         return res
 
@@ -156,32 +191,56 @@ class GroupSender(object):
 
 class CommandSender(object):
 
-    def __init__(self, eui, send_group=False):
-        socketio_cli = MSocketIO()
-        namespace = socketio_cli.define(EventNameSpace)
+    def __init__(self, eui, wait_time=10, send_group=False):
+        socketio_cli = self.socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+        namespace = socketio_cli.define(EventNameSpace, path=NAMESPACE)
         self.eui = eui
         self.socketio = socketio_cli
         self.namespace = namespace
         self.send_group = send_group
         self.cmd = 'tx' if not send_group else 'mtx'
         self.namespace.on('post_rx', self.on_post_rx)
+        self.namespace.on('connect', self.on_connect)
         self.success = False
+        self.wait_time = wait_time
+
+    def on_connect(self):
+        print('connect')
+
+        self.send_message()
 
     def on_post_rx(self, data):
+        print('on_post_rx', data)
         if data['EUI'].upper() == self.eui.upper():
             # todo something
             if data['data'][:2] == 'A1':
+                print('receive message: ', data)
                 self.success = True
 
-    def send(self):
+    def send_message(self):
         try:
             data = self._wrap_data()
             self.namespace.emit('tx', data)
-            self.socketio.wait(3)
+            print('send data', data)
+            self.socketio.wait(self.wait_time)
             return self.success
         finally:
             if self.socketio:
                 self.socketio.disconnect()
+
+
+    def send(self):
+        self.socketio.wait(5)
+        return self.success
+        # try:
+        #     data = self._wrap_data()
+        #     self.namespace.emit('tx', data)
+        #     print('send data', data)
+        #     self.socketio.wait(10)
+        #     return self.success
+        # finally:
+        #     if self.socketio:
+        #         self.socketio.disconnect()
 
     def _wrap_data(self):
         raise NotImplementedError
@@ -246,18 +305,69 @@ class UpLoadCommandSender_2(CommandSender):
                 }
 
 
+class UpLoadCommandSender_3(CommandSender):
+    def _wrap_data(self):
+        return {
+                    'cmd': self.cmd,
+                    'EUI': self.eui,
+                    'port': 3,
+                    'rx_window': 2,
+                    'data': (chr(0xA2) + chr(0x55)).encode('hex')
+                }
+
+
+class UpLoadCommandSender_4(CommandSender):
+    def _wrap_data(self):
+        return {
+                    'cmd': self.cmd,
+                    'EUI': self.eui,
+                    'port': 3,
+                    'rx_window': 2,
+                    'data': (chr(0xA2) + chr(0x56)).encode('hex')
+                }
+
 
 if __name__ == '__main__':
-    # group_eui = '0000734E'
-    # dev_euis = ['0000000000000002']
-    # with open('3HelloNIOT.TXT', 'r') as f:
-    #     print('reading file ...')
-    #     content = f.read()
-    #     start = time.time()
-    #     send_manager = GroupSender(content, group_eui, dev_euis, package_length=10)
-    #     send_manager.send()
-    #     end = time.time()
-    #     print('Use %s seconds' %(end - start))
-    sockio = MSocketIO()
-    command = OpenLightCommandSender('esfasdf', sockio, send_group=True)
-    command.send()
+    group_eui = '0000734E'
+    dev_euis = ['0000000000000002','0000000000000001']
+    large_file = open('composer.lock', mode='r+')
+    print(len(large_file.read()))
+    with open('info2.TXT', 'rb') as f:
+        print('reading file ...')
+        content = f.read()
+
+        start = time.time()
+        send_manager = GroupSender(content, group_eui, dev_euis,wait_time=6, package_length=30)
+        send_manager.send()
+        end = time.time()
+        print('Use %s seconds' % (end - start))
+
+
+# if __name__ == '__main__':
+#     from threading import Thread
+#     import threading
+#     import  time
+#     thread_ids = []
+#
+#     class TestThread(Thread):
+#         def run(self):
+#             global thread_ids
+#             thread_ids.append(self.ident)
+#             try:
+#                 while True:
+#                     print(self.name, time.time())
+#                     time.sleep(0.5)
+#             finally:
+#                 print(self.name, 'stop')
+#
+#
+#     t1 = TestThread()
+#     t2 = TestThread()
+#     t1.start()
+#     t2.start()
+#     t1.join()
+#     t2.join()
+#     time.sleep(3)
+#     thread_id = thread_ids[0]
+#     thr = threading.
+

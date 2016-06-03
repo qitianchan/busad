@@ -2,7 +2,7 @@
 from flask_restful import Resource
 from flask import Blueprint, jsonify, request
 from server.app.resources.sendfile.send_file import OpenLightCommandSender, CloseLightCommandSender, RssiTestCommandSender,\
-    UpLoadCommandSender, UpLoadCommandSender_2
+    UpLoadCommandSender, UpLoadCommandSender_2, UpLoadCommandSender_3, UpLoadCommandSender_4
 
 from server.app.utils import MSocketIO, EventNameSpace
 command = Blueprint('command', __name__)
@@ -13,7 +13,7 @@ def open_power():
     open_sender = OpenLightCommandSender(eui)
     success = open_sender.send()
     if success:
-        return jsonify({'code': '2000', 'message': 'open power success'})
+        return jsonify({'success': True, 'message': 'open power success'})
     else:
         response = jsonify({'success': False, 'message': 'open power failed'})
         response.status_code = 422
@@ -48,7 +48,7 @@ def rssi_test():
 @command.route('/uploadmessage', methods=['POST'])
 def upload_message():
     eui = request.json.get('bus_eui').strip().upper()
-    sender = UpLoadCommandSender(eui)
+    sender = UpLoadCommandSender(eui, wait_time=18)
     success = sender.send()
     if success:
         return jsonify({'success': True, 'message': 'Upload message 1 success'})
@@ -61,11 +61,37 @@ def upload_message():
 @command.route('/uploadmessage2', methods=['POST'])
 def upload_message2():
     eui = request.json.get('bus_eui').strip().upper()
-    sender = UpLoadCommandSender_2(eui)
+    sender = UpLoadCommandSender_2(eui, wait_time=18)
     success = sender.send()
     if success:
         return jsonify({'success': True, 'message': 'Upload message 2 success'})
     else:
         response = jsonify({'success': False, 'message': 'Upload message 2 failed'})
+        response.status_code = 422
+        return response
+
+
+@command.route('/uploadmessage3', methods=['POST'])
+def upload_message3():
+    eui = request.json.get('bus_eui').strip().upper()
+    sender = UpLoadCommandSender_3(eui, wait_time=18)
+    success = sender.send()
+    if success:
+        return jsonify({'success': True, 'message': 'Upload message 3 success'})
+    else:
+        response = jsonify({'success': False, 'message': 'Upload message 3 failed'})
+        response.status_code = 422
+        return response
+
+
+@command.route('/uploadmessage4', methods=['POST'])
+def upload_message4():
+    eui = request.json.get('bus_eui').strip().upper()
+    sender = UpLoadCommandSender_4(eui, wait_time=18)
+    success = sender.send()
+    if success:
+        return jsonify({'success': True, 'message': 'Upload message 4 success'})
+    else:
+        response = jsonify({'success': False, 'message': 'Upload message 4 failed'})
         response.status_code = 422
         return response

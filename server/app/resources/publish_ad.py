@@ -95,7 +95,6 @@ class TestNamespace(BaseNamespace):
             print(msg)
 
 
-
 class Publish(Resource):
 
     # TODO:文件接收

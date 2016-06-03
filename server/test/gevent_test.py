@@ -6,6 +6,7 @@ import time
 import websocket
 app = Flask(__name__)
 app.debug = True
+from threading import Thread
 
 
 @app.route('/long-polling')
@@ -28,7 +29,21 @@ def long_polling():
 def index():
     return 'index'
 
+thread_ids = []
+
+
+class TestThread(Thread):
+    def run(self):
+        global thread_ids
+        thread_ids.append(self)
+
+
 if __name__ == '__main__':
     # server = WSGIServer(('127.0.0.1', 6543), app)
     # server.serve_forever()
-    app.run(port=6543)
+    # app.run(port=6543)
+    t1 = TestThread()
+    t2 = TestThread()
+    t1.start()
+    t2.start()
+

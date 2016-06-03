@@ -33,13 +33,17 @@ class Group(db.Model):
         return cls.query.filter(Group.user_id == g.user.id).all()
 
     @classmethod
-    def get(cls, group_id):
-        return cls.query.filter(Group.id == group_id).first()
+    def get(cls, id):
+        return cls.query.filter(Group.id == id).first()
 
     @classmethod
-    def delete(cls, group_id):
-        buses = Bus.query.filter(Bus.group_id == group_id).all()
-        del_obj = cls.get(group_id)
+    def get_by_groupid(cls, group_id):
+        return cls.query.filter(cls.group_id == group_id).first()
+
+    @classmethod
+    def delete(cls, id):
+        buses = Bus.query.filter(Bus.group_id == id).all()
+        del_obj = cls.get(id)
         db.session.delete(del_obj)
 
         if buses:

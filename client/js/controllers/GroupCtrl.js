@@ -1,31 +1,31 @@
 /**
  * Created by qitian on 2016/5/9 0009.
  */
-UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', 'Group', function($scope, $location, FileUploader, Group) {
-    $scope.groupsSelected = [];
+UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', 'Group', 'UserInfo','toaster', function($scope, $location, FileUploader, Group, UserInfo, toaster) {
+    UserInfo.one('ss').customGET().then(function(ret){
+           $scope.userInfo = ret;
+        });
+
     Group.getList().then(function(ret){
        $scope.groups = ret;
     });
+
+    $scope.groupSelected = null;
     $scope.selectGroup = function(item){
         if(item.selected === false || item.selected === undefined){
             item.selected = true;
-            $scope.groupsSelected.push(item);
-        }else {
-            item.selected = false;
-            for(var i=0; i<$scope.groupsSelected.length; i++){
-                if($scope.groupsSelected[i].id === item.id){
-                    var target = $scope.groupsSelected.splice(i, 1)[0];
-                    target.selected = false;
-                }
+            if ($scope.groupSelected !== null){
+                $scope.groupSelected.selected = false;
             }
+            $scope.groupSelected = item
         }
     };
 
 
     var uploader = $scope.uploader = new FileUploader({
-            url: 'http://localhost:5000/api/publish'
-            //url: 'http://183.230.40.230:9090/api/publish'
-        });
+        //url: 'http://183.230.40.230:9090/api/group/publish'
+        url: 'http://localhost:5000/api/group/publish'
+    });
     uploader.filters.push({
             name: 'customFilter',
             fn: function(item /*{File|FileLikeObject}*/, options) {
@@ -46,6 +46,25 @@ UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', 'Group', 
             return '|TXT|'.indexOf(type) !== -1;
         }
     });
+
+    $scope.publishAD = function(){
+        if($scope.groupSelected == null){
+            toaster.pop('error', '未选择要发送的分组')
+        }else{
+            $scope.uploading = true;
+            var item = $scope.uploader.queue[0];
+
+            item.formData = [{'group_id': $scope.groupSelected.group_id, 'user_id': $scope.userInfo.id}];
+            $scope.uploader.uploadItem(item);
+            $scope.uploader.onCompleteItem = function(item, respone, status, headers){
+                $scope.progress_code = respone.progress_code;
+                if($scope.progress_code){
+                     $scope.timer = $interval(getProgess, 4000, 1000);
+                }
+            };
+        }
+
+    };
 
     // CALLBACKS
 

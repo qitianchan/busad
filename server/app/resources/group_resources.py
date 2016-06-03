@@ -8,6 +8,9 @@ from server.app.models import Group, Bus, Route
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from json import dumps, loads
+from server.app.resources.sendfile.send_file import GroupSender
+import threading
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -149,6 +152,7 @@ class GroupAPI(Resource):
             response.status_code = 404
             return response
 
+
 class GroupMember(Resource):
     decorators = [auth.login_required]
 
@@ -157,9 +161,9 @@ class GroupMember(Resource):
 
     def put(self, group_id):
 
-        # socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
-        #
-        # event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
+        socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
+
+        event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
 
         group = Group.get(group_id)
         members = loads(request.data)
@@ -245,6 +249,34 @@ def filter_buses(buses, route_id):
 def add_group_to_lora_wan_server(group_eui, group_name):
     # todo: 添加组到loraWAN
     pass
+
+
+class GroupUpload(Resource):
+
+    def post(self):
+        print('hello, GroupUpload')
+        content = request.files['file'].read()
+        group_id = request.form['group_id']
+        user_id = request.form['user_id']
+        group = Group.get_by_groupid(group_id)
+
+        if group:
+            dev_euis = Bus.get_euis_by_group_id(group.id, user_id=user_id)
+            if dev_euis:
+                sender = GroupSender(content, group_id, dev_euis, package_length=40)
+                new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
+
+                try:
+                    new_thread.start()
+                except Exception, e:
+                    print '*' * 120
+                    print e.message
+
+                success = sender.send()
+
+        return 'dsf'
+
+
 
 if __name__ == '__main__':
     APP_EUI = 'BB7A000000000032'

@@ -91,5 +91,27 @@ UserApp.controller('CommandCtrl', ['$scope', 'toaster', 'Group', 'Restangular', 
             toaster.pop('error', '还没有选中要发送命令的设备');
         }
     };
+        $scope.uploadMessage3 = function(){
+        if($scope.selected !== null){
+            command.one('uploadmessage3').customPOST($scope.selected).then(function(res){
+                toaster.pop('success', '成功上传测试信息3');
+            },function(res){
+                toaster.pop('error', '上传测试信息3 失败')
+            });
+        }else{
+            toaster.pop('error', '还没有选中要发送命令的设备');
+        }
+    };
+    $scope.uploadMessage4 = function(){
+        if($scope.selected !== null){
+            command.one('uploadmessage4').customPOST($scope.selected).then(function(res){
+                toaster.pop('success', '成功上传测试信息4');
+            },function(res){
+                toaster.pop('error', '上传测试信息4 失败')
+            });
+        }else{
+            toaster.pop('error', '还没有选中要发送命令的设备');
+        }
+    };
 
 }]);
