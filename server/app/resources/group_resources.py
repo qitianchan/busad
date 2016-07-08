@@ -264,13 +264,14 @@ class GroupUpload(Resource):
             dev_euis = Bus.get_euis_by_group_id(group.id, user_id=user_id)
             if dev_euis:
                 sender = GroupSender(content, group_id, dev_euis, package_length=40)
-                new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
+                #todo: 发送线程
+                # new_thread = threading.Thread(target=send_file_with_timelimit, args=(chunks, euis, progress_code, last_progress_code))
 
-                try:
-                    new_thread.start()
-                except Exception, e:
-                    print '*' * 120
-                    print e.message
+                # try:
+                #     new_thread.start()
+                # except Exception, e:
+                #     print '*' * 120
+                #     print e.message
 
                 success = sender.send()
 

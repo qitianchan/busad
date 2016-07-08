@@ -23,8 +23,8 @@ UserApp.controller('GroupCtrl', ['$scope', '$location','FileUploader', 'Group', 
 
 
     var uploader = $scope.uploader = new FileUploader({
-        //url: 'http://183.230.40.230:9090/api/group/publish'
-        url: 'http://localhost:5000/api/group/publish'
+        url: 'http://183.230.40.230:9090/api/group/publish'
+        //url: 'http://localhost:5000/api/group/publish'
     });
     uploader.filters.push({
             name: 'customFilter',

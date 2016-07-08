@@ -30,8 +30,8 @@ UserApp.controller('AdUploadCtrl', ['$scope','$interval', 'District', 'Route','B
         //});
 
         var uploader = $scope.uploader = new FileUploader({
-            url: 'http://localhost:5000/api/publish',
-            //url: 'http://183.230.40.230:9090/api/publish'
+            //url: 'http://localhost:5000/api/publish',
+            url: 'http://183.230.40.230:9090/api/publish'
         });
         $scope.progress_code = '';
         // 进度( 0 - 100 )
