@@ -381,3 +381,14 @@ h6, .h6 {
 .brand {
     color: #ffffff;
 }
+
+.footer {
+    position: fixed;
+    height: 100px;
+    bottom: 0;
+    width: 100%;
+}
+
+.bottom-menu {
+  margin-left: 30px;
+}
