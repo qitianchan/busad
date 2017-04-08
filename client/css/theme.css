@@ -290,7 +290,7 @@ h6, .h6 {
 .bus-select-region-inner {
     margin-top: 20px;
     margin-left: 20px;
-    min-height: 200px;
+    min-height: 100px;
 }
 
 .upload-file {
@@ -303,7 +303,7 @@ h6, .h6 {
     /*padding: 0px;*/
     /*cursor: pointer;*/
     /*opacity: 0;*/
-    margin-top: 400px;
+    margin-top: 160px;
     padding-top: 20px;
 }
 .page .row {
