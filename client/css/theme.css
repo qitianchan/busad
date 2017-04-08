@@ -279,7 +279,7 @@ h6, .h6 {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
 
     border-top: 2em solid #9588B2;
-    margin-top: 2em;
+    /*margin-top: 1em;*/
 }
 
 .route-checkbox-region-inner {
@@ -391,4 +391,8 @@ h6, .h6 {
 
 .bottom-menu {
   margin-left: 30px;
+}
+
+.selection {
+  margin-bottom: 20px;
 }
