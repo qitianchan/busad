@@ -7,6 +7,7 @@ from server.app.resources.sendfile.send_file import OpenLightCommandSender, Clos
 from server.app.utils import MSocketIO, EventNameSpace
 command = Blueprint('command', __name__)
 
+
 @command.route('/openpower', methods=["POST"])
 def open_power():
     eui = request.json.get('bus_eui').strip().upper()

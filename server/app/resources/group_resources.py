@@ -160,30 +160,12 @@ class GroupMember(Resource):
         return {'message': 'success'}, 201
 
     def put(self, group_id):
-
-        socketio_cli = MSocketIO(LORA_HOST, LORA_PORT, EventNameSpace, params={'app_eui': APP_EUI, 'token': TOKEN})
-
-        event_space = socketio_cli.define(EventNameSpace, path=NAMESPACE)
-
         group = Group.get(group_id)
         members = loads(request.data)
         delete = []
         add = []
         failed_rm_euis = []
         failed_add_euis = []
-
-        def on_rm_dev_from_group(data):
-            if data['success'] == 0:
-                dev_eui = data['dev_eui']
-                failed_rm_euis.append(dev_eui)
-
-        def on_add_dev_into_group(data):
-            if data['success'] == 0:
-                dev_eui = data['dev_eui']
-                failed_add_euis.append(dev_eui)
-
-        event_space.on('rm_dev_from_group', on_rm_dev_from_group)
-        event_space.on('add_dev_into_group', on_add_dev_into_group)
 
         if group.group_id:
             original_members = group.buses
@@ -208,15 +190,6 @@ class GroupMember(Resource):
                 if bus:
                     add_buses.append(bus)
 
-            for bus in delete_buses:
-                event_space.emit('rm_dev_from_group', {'group_id': group.group_id, 'cmd': 'rm_dev_from_group',
-                                                        'dev_eui': bus.eui})
-            for bus in add_buses:
-                event_space.emit('add_dev_into_group', {'group_id': group.group_id, 'cmd': 'add_dev_into_group',
-                                                        'dev_eui': bus.eui})
-            # 等待socketio的操作结果
-            socketio_cli.wait(3)
-
             # 写入数据库
             for bus in delete_buses:
                 if bus.eui not in failed_rm_euis:
@@ -231,10 +204,8 @@ class GroupMember(Resource):
             error_message = ''
             if failed_add_euis + failed_rm_euis:
                 error_message = ', '.join(failed_add_euis + failed_rm_euis) + ' 操作失败'
-            socketio_cli.disconnect()
             return {'error_message': error_message}, 201
 
-        socketio_cli.disconnect()
         return {'error_message': '组不存在'}, 422
 
 
